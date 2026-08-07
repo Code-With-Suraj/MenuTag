@@ -1,0 +1,6 @@
+{
+  "name": "Menu Tag Studio - Bulk Menu Card & Label Generator",
+  "description": "Bulk generate professional, print-ready food tags, buffet labels, QR menu cards, and counter displays from CSV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

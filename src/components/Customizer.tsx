@@ -1,0 +1,645 @@
+import React from 'react';
+import {
+  Palette,
+  Maximize2,
+  Building,
+  Sliders,
+  Eye,
+  Type,
+  Layout,
+  Upload,
+  RotateCcw,
+  Sparkles,
+  Scissors,
+  Layers,
+  DollarSign,
+  Coins,
+} from 'lucide-react';
+import { formatPrice } from '../utils/format';
+import {
+  TemplateId,
+  TagSize,
+  BrandConfig,
+  BorderStyleType,
+  FontFamilyType,
+} from '../types';
+import { TEMPLATES, TAG_SIZES } from '../data/templates';
+
+interface CustomizerProps {
+  selectedTemplate: TemplateId;
+  onSelectTemplate: (templateId: TemplateId) => void;
+  selectedSize: TagSize;
+  onSelectSize: (size: TagSize) => void;
+  brandConfig: BrandConfig;
+  onUpdateBrandConfig: (updated: Partial<BrandConfig>) => void;
+  onResetToTemplateDefaults: () => void;
+}
+
+export const Customizer: React.FC<CustomizerProps> = ({
+  selectedTemplate,
+  onSelectTemplate,
+  selectedSize,
+  onSelectSize,
+  brandConfig,
+  onUpdateBrandConfig,
+  onResetToTemplateDefaults,
+}) => {
+  const [activeTab, setActiveTab] = React.useState<'templates' | 'size' | 'branding' | 'colors' | 'toggles'>(
+    'templates'
+  );
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onUpdateBrandConfig({ logoUrl: event.target?.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl print:hidden">
+      <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div>
+          <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+            <Sliders className="w-5 h-5 text-amber-400" />
+            <span>2. Design & Branding Customizer</span>
+          </h2>
+          <p className="text-xs text-slate-400">
+            Choose templates, dimensions, brand colors, typography, and card elements.
+          </p>
+        </div>
+
+        <button
+          onClick={onResetToTemplateDefaults}
+          className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-amber-300 hover:bg-slate-800 border border-slate-800 flex items-center gap-1 transition-colors"
+          title="Reset colors and fonts to chosen template default"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Reset Theme</span>
+        </button>
+      </div>
+
+      {/* Navigation Sub-Tabs */}
+      <div className="flex overflow-x-auto gap-1 py-3 no-scrollbar text-xs border-b border-slate-800">
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium flex items-center gap-1.5 transition-colors ${
+            activeTab === 'templates'
+              ? 'bg-amber-500 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Layout className="w-3.5 h-3.5" />
+          <span>8 Pro Templates</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('size')}
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium flex items-center gap-1.5 transition-colors ${
+            activeTab === 'size'
+              ? 'bg-amber-500 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          <span>Card Size & Tent</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('branding')}
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium flex items-center gap-1.5 transition-colors ${
+            activeTab === 'branding'
+              ? 'bg-amber-500 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Building className="w-3.5 h-3.5" />
+          <span>Brand & Logo</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('colors')}
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium flex items-center gap-1.5 transition-colors ${
+            activeTab === 'colors'
+              ? 'bg-amber-500 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Palette className="w-3.5 h-3.5" />
+          <span>Colors & Style</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('toggles')}
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium flex items-center gap-1.5 transition-colors ${
+            activeTab === 'toggles'
+              ? 'bg-amber-500 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>Display Toggles</span>
+        </button>
+      </div>
+
+      {/* Tab Content Panels */}
+      <div className="pt-4">
+        {/* 1. TEMPLATES TAB */}
+        {activeTab === 'templates' && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {TEMPLATES.map((tmpl) => {
+              const isSelected = selectedTemplate === tmpl.id;
+              return (
+                <div
+                  key={tmpl.id}
+                  onClick={() => onSelectTemplate(tmpl.id)}
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-amber-400 bg-amber-500/10 shadow-lg scale-[1.02]'
+                      : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-950'
+                  }`}
+                >
+                  <div>
+                    <div
+                      className={`h-12 rounded-lg p-2 flex items-center justify-between text-xs font-bold ${tmpl.previewBg}`}
+                    >
+                      <span>{tmpl.name.split(':')[1] || tmpl.name}</span>
+                      {isSelected && <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />}
+                    </div>
+                    <p className="text-[11px] font-semibold text-slate-200 mt-2">{tmpl.tagline}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2">{tmpl.description}</p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {tmpl.suitableFor.slice(0, 2).map((s, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 2. CARD SIZE & TENT CARDS TAB */}
+        {activeTab === 'size' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {(Object.keys(TAG_SIZES) as TagSize[]).map((sizeKey) => {
+                const info = TAG_SIZES[sizeKey];
+                const isSelected = selectedSize === sizeKey;
+                return (
+                  <div
+                    key={sizeKey}
+                    onClick={() => onSelectSize(sizeKey)}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-amber-400 bg-amber-500/10'
+                        : 'border-slate-800 bg-slate-950/60 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-100">{info.label}</span>
+                      {info.isTentCard && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">
+                          Tent Card
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] font-mono text-amber-400 mt-1">
+                      {info.widthInInches}" × {info.heightInInches}"
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1">{info.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {selectedSize === 'custom' && (
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-4 text-xs">
+                <div>
+                  <label className="text-slate-400 block mb-1">Custom Width (Inches):</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="12"
+                    value={brandConfig.customWidthInches || 3.5}
+                    onChange={(e) =>
+                      onUpdateBrandConfig({ customWidthInches: parseFloat(e.target.value) || 3.5 })
+                    }
+                    className="p-1.5 rounded bg-slate-900 border border-slate-700 text-white w-24 text-center"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Custom Height (Inches):</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="12"
+                    value={brandConfig.customHeightInches || 2.5}
+                    onChange={(e) =>
+                      onUpdateBrandConfig({ customHeightInches: parseFloat(e.target.value) || 2.5 })
+                    }
+                    className="p-1.5 rounded bg-slate-900 border border-slate-700 text-white w-24 text-center"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 3. BRANDING & LOGO TAB */}
+        {activeTab === 'branding' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label className="text-slate-300 font-semibold block mb-1">Business Name / Restaurant:</label>
+              <input
+                type="text"
+                value={brandConfig.businessName}
+                onChange={(e) => onUpdateBrandConfig({ businessName: e.target.value })}
+                placeholder="e.g. L'Aura Fine Dining"
+                className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-300 font-semibold block mb-1">Upload Brand Logo (PNG / SVG):</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                  id="brand-logo-input"
+                />
+                <label
+                  htmlFor="brand-logo-input"
+                  className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer flex items-center gap-1.5 font-medium"
+                >
+                  <Upload className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{brandConfig.logoUrl ? 'Change Logo' : 'Upload Logo'}</span>
+                </label>
+                {brandConfig.logoUrl && (
+                  <button
+                    onClick={() => onUpdateBrandConfig({ logoUrl: undefined })}
+                    className="text-[11px] text-red-400 hover:underline"
+                  >
+                    Remove Logo
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-slate-300 font-semibold block mb-1">Footer Slogan / Text:</label>
+              <input
+                type="text"
+                value={brandConfig.footerText || ''}
+                onChange={(e) => onUpdateBrandConfig({ footerText: e.target.value })}
+                placeholder="e.g. Executive Chef Selection • Fresh Daily"
+                className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-300 font-semibold block mb-1">Website / Ordering URL:</label>
+              <input
+                type="text"
+                value={brandConfig.website || ''}
+                onChange={(e) => onUpdateBrandConfig({ website: e.target.value })}
+                placeholder="e.g. www.laurarestaurant.com"
+                className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 4. COLORS & STYLING TAB */}
+        {activeTab === 'colors' && (
+          <div className="space-y-4 text-xs">
+            {/* Color Inputs Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Primary Color</label>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                  <input
+                    type="color"
+                    value={brandConfig.primaryColor}
+                    onChange={(e) => onUpdateBrandConfig({ primaryColor: e.target.value })}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-[10px] text-slate-300">{brandConfig.primaryColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Background Fill</label>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                  <input
+                    type="color"
+                    value={brandConfig.backgroundColor}
+                    onChange={(e) => onUpdateBrandConfig({ backgroundColor: e.target.value })}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-[10px] text-slate-300">{brandConfig.backgroundColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Text Color</label>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                  <input
+                    type="color"
+                    value={brandConfig.textColor}
+                    onChange={(e) => onUpdateBrandConfig({ textColor: e.target.value })}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-[10px] text-slate-300">{brandConfig.textColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Accent Color</label>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                  <input
+                    type="color"
+                    value={brandConfig.accentColor}
+                    onChange={(e) => onUpdateBrandConfig({ accentColor: e.target.value })}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-[10px] text-slate-300">{brandConfig.accentColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Border Color</label>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                  <input
+                    type="color"
+                    value={brandConfig.borderColor}
+                    onChange={(e) => onUpdateBrandConfig({ borderColor: e.target.value })}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-[10px] text-slate-300">{brandConfig.borderColor}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1 font-semibold">Badge Fill</label>
+                <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                  <input
+                    type="color"
+                    value={brandConfig.secondaryColor}
+                    onChange={(e) => onUpdateBrandConfig({ secondaryColor: e.target.value })}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-[10px] text-slate-300">{brandConfig.secondaryColor}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Typography & Border Style controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Border Style:</label>
+                <select
+                  value={brandConfig.borderStyle}
+                  onChange={(e) => onUpdateBrandConfig({ borderStyle: e.target.value as BorderStyleType })}
+                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white"
+                >
+                  <option value="solid">Solid Line</option>
+                  <option value="gold-foil">Gold Foil Metallic Frame</option>
+                  <option value="double">Double Luxury Border</option>
+                  <option value="scalloped">Scalloped Artisanal</option>
+                  <option value="dashed">Dashed Pattern</option>
+                  <option value="none">Borderless</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Typography Style:</label>
+                <select
+                  value={brandConfig.fontFamily}
+                  onChange={(e) => onUpdateBrandConfig({ fontFamily: e.target.value as FontFamilyType })}
+                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white"
+                >
+                  <option value="serif">Classic Serif (Playfair / Cormorant)</option>
+                  <option value="sans">Modern Sans (Inter / Plus Jakarta)</option>
+                  <option value="display">Bold Display (Impact / Outfit)</option>
+                  <option value="mono">Clean Monospace (Nutritional / Tech)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">
+                  Corner Radius: <span className="text-amber-400">{brandConfig.cornerRadius}px</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="24"
+                  value={brandConfig.cornerRadius}
+                  onChange={(e) => onUpdateBrandConfig({ cornerRadius: parseInt(e.target.value) })}
+                  className="w-full accent-amber-500 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. DISPLAY TOGGLES TAB */}
+        {activeTab === 'toggles' && (
+          <div className="space-y-4">
+            {/* Price & Currency Special Controls Box */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-amber-500/30 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center text-base border border-amber-500/30">
+                    {brandConfig.currencySymbol || '$'}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-100 text-sm flex items-center gap-1.5">
+                      <span>Price Visibility & Currency Control</span>
+                      <Coins className="w-4 h-4 text-amber-400" />
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Toggle whether price is displayed on cards & select preferred currency symbol ($ , ₹ , € , £ , ¥ , etc.)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Show Price Main Toggle */}
+                <label className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors shadow-sm">
+                  <input
+                    type="checkbox"
+                    checked={brandConfig.showPrice}
+                    onChange={(e) => onUpdateBrandConfig({ showPrice: e.target.checked })}
+                    className="accent-amber-500 rounded w-4 h-4"
+                  />
+                  <span className={`font-bold text-xs ${brandConfig.showPrice ? 'text-amber-300' : 'text-slate-400'}`}>
+                    {brandConfig.showPrice ? 'Show Price (ON) 🏷️' : 'Hide Price (OFF) 🚫'}
+                  </span>
+                </label>
+              </div>
+
+              {/* Currency Selector Presets */}
+              <div className="space-y-2">
+                <label className="text-slate-300 font-semibold text-xs block">Select Currency Symbol / Code:</label>
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  {[
+                    { code: '$', label: 'USD/CAD/AUD ($)' },
+                    { code: '₹', label: 'INR (₹)' },
+                    { code: '€', label: 'EUR (€)' },
+                    { code: '£', label: 'GBP (£)' },
+                    { code: '¥', label: 'JPY/CNY (¥)' },
+                    { code: 'AED', label: 'UAE (AED)' },
+                    { code: 'SAR', label: 'Saudi (SAR)' },
+                    { code: 'Rs.', label: 'Rupees (Rs.)' },
+                    { code: 'C$', label: 'Canada (C$)' },
+                    { code: 'A$', label: 'Australia (A$)' },
+                    { code: '', label: 'No Symbol' },
+                  ].map((curr) => {
+                    const isSelected = brandConfig.currencySymbol === curr.code;
+                    return (
+                      <button
+                        key={curr.code || 'none'}
+                        type="button"
+                        onClick={() => onUpdateBrandConfig({ currencySymbol: curr.code })}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono font-bold border transition-all ${
+                          isSelected
+                            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md scale-105'
+                            : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                        }`}
+                      >
+                        {curr.code || 'None'}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Free Text Custom Currency Input */}
+                <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400">Custom Symbol/Code:</span>
+                    <input
+                      type="text"
+                      value={brandConfig.currencySymbol}
+                      onChange={(e) => onUpdateBrandConfig({ currencySymbol: e.target.value })}
+                      placeholder="e.g. S$, RM, ฿, Fr, kr"
+                      className="p-1.5 rounded-lg bg-slate-900 border border-slate-700 text-amber-300 font-mono font-bold text-xs w-28 focus:outline-none focus:border-amber-500 text-center"
+                    />
+                  </div>
+
+                  <div className="text-[11px] font-mono text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
+                    Live Sample:{' '}
+                    <span className="font-bold text-amber-400">
+                      {brandConfig.showPrice
+                        ? formatPrice(280, brandConfig.currencySymbol) || '280'
+                        : '[Price Hidden]'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Other Display Toggles Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showDietIcon}
+                  onChange={(e) => onUpdateBrandConfig({ showDietIcon: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Veg/NonVeg Icon 🟢🔴</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showSpiceIcon}
+                  onChange={(e) => onUpdateBrandConfig({ showSpiceIcon: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Spice Meter 🌶🌶</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showAllergens}
+                  onChange={(e) => onUpdateBrandConfig({ showAllergens: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Allergen Badges 🥛🌾</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showNutrition}
+                  onChange={(e) => onUpdateBrandConfig({ showNutrition: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Calories & Macros</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showQrCode}
+                  onChange={(e) => onUpdateBrandConfig({ showQrCode: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Live QR Code</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showCategory}
+                  onChange={(e) => onUpdateBrandConfig({ showCategory: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Category Tag</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showBadges}
+                  onChange={(e) => onUpdateBrandConfig({ showBadges: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200">Chef Special / BestSeller</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showCropMarks}
+                  onChange={(e) => onUpdateBrandConfig({ showCropMarks: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200 font-semibold text-amber-300 flex items-center gap-1">
+                  <Scissors className="w-3.5 h-3.5" />
+                  Scissors Crop Marks
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
