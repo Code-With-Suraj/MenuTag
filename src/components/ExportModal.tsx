@@ -73,6 +73,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     try {
       const success = await exportCardsSheetPdf(
         targetItems,
+        brandConfig,
+        selectedSize,
         paperSize,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
@@ -105,6 +107,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     try {
       const success = await exportCardsCatalogPdf(
         targetItems,
+        brandConfig,
+        selectedSize,
         paperSize,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
@@ -135,11 +139,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     setProgressMsg('Rendering 300 DPI high-res card PNGs for ZIP archive...');
 
     try {
-      const success = await exportBulkCardsZip(targetItems, (current, total) => {
-        const pct = Math.round((current / total) * 100);
-        setProgressPercent(pct);
-        setProgressMsg(`Capturing tag ${current} of ${total} (${pct}%)...`);
-      });
+      const success = await exportBulkCardsZip(
+        targetItems,
+        brandConfig,
+        selectedSize,
+        (current, total) => {
+          const pct = Math.round((current / total) * 100);
+          setProgressPercent(pct);
+          setProgressMsg(`Capturing tag ${current} of ${total} (${pct}%)...`);
+        }
+      );
       if (success) {
         setExportComplete(
           `Successfully bundled and downloaded ZIP archive with ${targetItems.length} high-res PNG tags!`
@@ -166,6 +175,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       const success = await exportBulkSvgsZip(
         targetItems,
         brandConfig,
+        selectedSize,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
           setProgressPercent(pct);
@@ -210,7 +220,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
     try {
       const cleanName = item.menuName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const success = await exportSingleCardPng(item.id, `menu_tag_${cleanName}.png`);
+      const success = await exportSingleCardPng(
+        item,
+        brandConfig,
+        selectedSize,
+        `menu_tag_${cleanName}.png`
+      );
       if (success) {
         setExportComplete(`Downloaded PNG for "${item.menuName}"!`);
       } else {
@@ -228,7 +243,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     const item = targetItems.find((i) => i.id === singleDishId) || targetItems[0];
     if (!item) return;
     resetStatus();
-    exportSingleSvg(item, brandConfig);
+    exportSingleSvg(item, brandConfig, selectedSize);
     setExportComplete(`Downloaded SVG vector for "${item.menuName}"!`);
   };
 

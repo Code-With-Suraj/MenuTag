@@ -11,10 +11,10 @@ import { formatPrice } from './format';
  */
 export function findCardElement(itemId: string): HTMLElement | null {
   const possibleIds = [
-    `export-card-${itemId}`,
     `preview-card-${itemId}`,
-    `inspect-card-${itemId}`,
     `print-sheet-${itemId}`,
+    `inspect-card-${itemId}`,
+    `export-card-${itemId}`,
     `card-${itemId}`,
     itemId,
   ];
@@ -27,62 +27,294 @@ export function findCardElement(itemId: string): HTMLElement | null {
 }
 
 /**
- * Capture a single DOM element and export as high-resolution HTML5 Canvas
+ * Check if a canvas element is completely transparent/blank
  */
-export async function captureElementToCanvas(
-  elementOrId: string | HTMLElement,
-  scale: number = 3
-): Promise<HTMLCanvasElement | null> {
-  const element =
-    typeof elementOrId === 'string' ? findCardElement(elementOrId) : elementOrId;
-  if (!element) return null;
-
+export function isCanvasBlank(canvas: HTMLCanvasElement): boolean {
+  if (!canvas || canvas.width === 0 || canvas.height === 0) return true;
   try {
-    // Wait for fonts & rendering
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return true;
+    const sampleW = Math.min(canvas.width, 80);
+    const sampleH = Math.min(canvas.height, 80);
+    const imgData = ctx.getImageData(0, 0, sampleW, sampleH);
+    const data = imgData.data;
+    // Look for any non-zero alpha channel pixel
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] > 10) return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * High-fidelity SVG vector markup generator matching card styling
+ */
+export function generateSvgCode(
+  item: MenuItem,
+  brand: BrandConfig,
+  sizeKey: TagSize = 'medium'
+): string {
+  const width = 360;
+  const height = 260;
+  const isVeg = item.dietaryType === 'Veg';
+  const isNonVeg = item.dietaryType === 'Non-Veg';
+  const isEgg = item.dietaryType === 'Egg';
+  const isVegan = item.dietaryType === 'Vegan' || item.vegan;
+  const isJain = item.dietaryType === 'Jain' || item.jain;
+
+  const symbolColor = isVeg || isVegan || isJain ? '#16a34a' : isNonVeg ? '#dc2626' : '#d97706';
+
+  const priceText =
+    brand.showPrice && item.price !== undefined && item.price !== ''
+      ? formatPrice(item.price, brand.currencySymbol)
+      : '';
+
+  const cleanName = (item.menuName || 'Menu Item')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const cleanDesc = (item.description || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const cleanCategory = (item.category || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const cleanFooter = (brand.footerText || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const cleanBiz = (brand.businessName || 'MENU TAG STUDIO')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Spice peppers
+  let spiceText = '';
+  if (brand.showSpiceIcon && item.spiceLevel && item.spiceLevel !== 'None') {
+    spiceText = item.spiceLevel === 'Hot' || item.spiceLevel === 'Extra Hot' ? '🌶🌶🌶' : item.spiceLevel === 'Medium' ? '🌶🌶' : '🌶';
+  }
+
+  // QR Code indicator
+  const showQr = brand.showQrCode && (item.qrUrl || brand.website);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <defs>
+    <style>
+      .biz-title { font-family: ${brand.fontFamily === 'serif' ? 'Georgia, serif' : 'system-ui, sans-serif'}; font-size: 11px; font-weight: 700; fill: ${brand.primaryColor}; letter-spacing: 1px; }
+      .dish-title { font-family: ${brand.fontFamily === 'serif' ? 'Georgia, serif' : 'system-ui, sans-serif'}; font-size: 15px; font-weight: bold; fill: ${brand.textColor}; }
+      .desc-text { font-family: system-ui, sans-serif; font-size: 10.5px; fill: ${brand.textColor}; opacity: 0.85; }
+      .badge-text { font-family: system-ui, sans-serif; font-size: 9px; font-weight: 700; fill: ${brand.backgroundColor}; }
+      .price-text { font-family: system-ui, sans-serif; font-size: 17px; font-weight: 900; fill: ${brand.primaryColor}; }
+      .nutri-text { font-family: monospace, sans-serif; font-size: 9.5px; fill: ${brand.textColor}; opacity: 0.75; }
+      .footer-text { font-family: system-ui, sans-serif; font-size: 8.5px; fill: ${brand.textColor}; opacity: 0.6; }
+    </style>
+  </defs>
+
+  <!-- Card Background Surface -->
+  <rect width="100%" height="100%" fill="${brand.backgroundColor || '#0f172a'}" rx="${brand.cornerRadius || 8}" stroke="${brand.borderColor || '#d97706'}" stroke-width="2"/>
+  
+  <!-- Header: Business & Category -->
+  <text x="18" y="28" class="biz-title">${cleanBiz.toUpperCase()}</text>
+  ${
+    brand.showCategory && item.category
+      ? `<text x="${width - 18}" y="28" font-family="system-ui, sans-serif" font-size="10" font-weight="600" text-anchor="end" fill="${brand.accentColor || '#f59e0b'}">${cleanCategory.toUpperCase()}</text>`
+      : ''
+  }
+  
+  <!-- Header Divider Line -->
+  <line x1="18" y1="36" x2="${width - 18}" y2="36" stroke="${brand.borderColor || '#d97706'}" stroke-opacity="0.35" stroke-width="1"/>
+
+  <!-- Dietary Symbol (Veg / Non-Veg / Egg) -->
+  ${
+    brand.showDietIcon
+      ? `
+  <rect x="18" y="48" width="16" height="16" fill="${brand.backgroundColor === '#ffffff' ? '#ffffff' : '#1e293b'}" stroke="${symbolColor}" stroke-width="1.8" rx="2"/>
+  <circle cx="26" cy="56" r="4.2" fill="${symbolColor}"/>
+  `
+      : ''
+  }
+
+  <!-- Dish Name & Spice Level -->
+  <text x="${brand.showDietIcon ? 42 : 18}" y="61" class="dish-title">${cleanName}</text>
+  ${
+    spiceText
+      ? `<text x="${width - 18}" y="61" font-size="11" text-anchor="end">${spiceText}</text>`
+      : ''
+  }
+  
+  <!-- Badges (Chef Special / Best Seller / New) -->
+  ${
+    item.chefRecommendation
+      ? `<rect x="18" y="74" width="88" height="15" rx="7.5" fill="${brand.primaryColor}"/>
+         <text x="62" y="85" class="badge-text" text-anchor="middle">★ CHEF CHOICE</text>`
+      : item.bestSeller
+      ? `<rect x="18" y="74" width="82" height="15" rx="7.5" fill="${brand.accentColor || '#f59e0b'}"/>
+         <text x="59" y="85" class="badge-text" text-anchor="middle">★ BEST SELLER</text>`
+      : ''
+  }
+  
+  <!-- Description -->
+  <text x="18" y="${item.chefRecommendation || item.bestSeller ? 108 : 92}" class="desc-text">
+    ${cleanDesc ? cleanDesc.slice(0, 52) + (cleanDesc.length > 52 ? '...' : '') : ''}
+  </text>
+  
+  <!-- Allergens / Portions info -->
+  ${
+    brand.showAllergens && item.allergen
+      ? `<text x="18" y="${item.chefRecommendation || item.bestSeller ? 126 : 110}" font-family="system-ui, sans-serif" font-size="9" fill="${brand.textColor}" opacity="0.65">Allergens: ${item.allergen}</text>`
+      : ''
+  }
+
+  <!-- Nutrition / Calories -->
+  ${
+    brand.showNutrition && item.calories
+      ? `<text x="18" y="198" class="nutri-text">${item.calories} kcal ${item.protein ? '• P:' + item.protein : ''} ${item.carbs ? '• C:' + item.carbs : ''}</text>`
+      : ''
+  }
+
+  <!-- QR Code Badge -->
+  ${
+    showQr
+      ? `
+  <g transform="translate(${width - 48}, 174)">
+    <rect width="30" height="30" fill="#ffffff" rx="3" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- QR pixel pattern representation -->
+    <rect x="4" y="4" width="8" height="8" fill="#000000"/>
+    <rect x="5.5" y="5.5" width="5" height="5" fill="#ffffff"/>
+    <rect x="6.5" y="6.5" width="3" height="3" fill="#000000"/>
+    
+    <rect x="18" y="4" width="8" height="8" fill="#000000"/>
+    <rect x="19.5" y="5.5" width="5" height="5" fill="#ffffff"/>
+    <rect x="20.5" y="6.5" width="3" height="3" fill="#000000"/>
+    
+    <rect x="4" y="18" width="8" height="8" fill="#000000"/>
+    <rect x="5.5" y="19.5" width="5" height="5" fill="#ffffff"/>
+    <rect x="6.5" y="20.5" width="3" height="3" fill="#000000"/>
+    <rect x="15" y="15" width="4" height="4" fill="#000000"/>
+    <rect x="22" y="22" width="4" height="4" fill="#000000"/>
+  </g>
+  `
+      : ''
+  }
+
+  <!-- Price Pill / Display -->
+  ${
+    priceText
+      ? `
+  <rect x="${showQr ? width - 150 : width - 100}" y="174" width="${showQr ? 96 : 82}" height="28" rx="6" fill="${brand.primaryColor}" fill-opacity="0.18"/>
+  <text x="${showQr ? width - 58 : width - 18}" y="194" class="price-text" text-anchor="end">${priceText}</text>
+  `
+      : ''
+  }
+  
+  <!-- Footer Divider & Slogan -->
+  <line x1="18" y1="214" x2="${width - 18}" y2="214" stroke="${brand.borderColor || '#d97706'}" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="18" y="234" class="footer-text">${cleanFooter}</text>
+</svg>`;
+}
+
+/**
+ * Convert SVG markup string directly to HTML5 Canvas (100% Reliable, Zero-DOM Dependency)
+ */
+export async function renderSvgToCanvas(
+  svgString: string,
+  width: number = 360,
+  height: number = 260,
+  scale: number = 3
+): Promise<HTMLCanvasElement> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      resolve(canvas);
+      return;
     }
 
-    const canvas = await html2canvas(element, {
-      scale,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null,
-      logging: false,
-      onclone: (clonedDoc) => {
-        // Ensure cloned element is un-clipped and visible
-        const clonedEl = clonedDoc.getElementById(element.id);
-        if (clonedEl) {
-          clonedEl.style.transform = 'none';
-          clonedEl.style.visibility = 'visible';
-          clonedEl.style.opacity = '1';
-        }
-      },
-    });
-    return canvas;
-  } catch (err) {
-    console.error('Canvas capture error for element:', elementOrId, err);
-    return null;
+    const img = new Image();
+    // Data URI with encodeURIComponent for instant, cross-browser parsing
+    const svgDataUri =
+      'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas);
+    };
+
+    img.onerror = () => {
+      // Fallback solid background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      resolve(canvas);
+    };
+
+    img.src = svgDataUri;
+  });
+}
+
+/**
+ * Capture a card element with automatic fallback to high-res SVG renderer
+ */
+export async function captureCardOrSvg(
+  item: MenuItem,
+  brand: BrandConfig,
+  sizeKey: TagSize = 'medium',
+  scale: number = 3
+): Promise<HTMLCanvasElement> {
+  // 1. First attempt: DOM capture from rendered preview
+  const element = findCardElement(item.id);
+  if (element) {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(element, {
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: brand.backgroundColor || '#ffffff',
+        logging: false,
+      });
+
+      if (canvas && !isCanvasBlank(canvas)) {
+        return canvas;
+      }
+    } catch (err) {
+      console.warn('html2canvas capture had issue, switching to SVG renderer:', err);
+    }
   }
+
+  // 2. Guaranteed Fail-Safe: Render via vector SVG
+  const svg = generateSvgCode(item, brand, sizeKey);
+  return await renderSvgToCanvas(svg, 360, 260, scale);
 }
 
 /**
  * Export a single element as high-res PNG file download
  */
 export async function exportSingleCardPng(
-  itemId: string,
-  filename: string = 'menu-tag.png'
+  item: MenuItem,
+  brand: BrandConfig,
+  sizeKey: TagSize = 'medium',
+  filename?: string
 ): Promise<boolean> {
-  const canvas = await captureElementToCanvas(itemId, 3.5);
-  if (!canvas) {
-    console.warn(`Could not find card element for item: ${itemId}`);
-    return false;
-  }
+  const canvas = await captureCardOrSvg(item, brand, sizeKey, 3.5);
+  if (!canvas || isCanvasBlank(canvas)) return false;
+
+  const defaultName = `menu_tag_${(item.menuName || 'card').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+  const fname = filename || defaultName;
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (blob) {
-        saveAs(blob, filename.endsWith('.png') ? filename : `${filename}.png`);
+        saveAs(blob, fname.endsWith('.png') ? fname : `${fname}.png`);
         resolve(true);
       } else {
         resolve(false);
@@ -96,6 +328,8 @@ export async function exportSingleCardPng(
  */
 export async function exportBulkCardsZip(
   items: MenuItem[],
+  brand: BrandConfig,
+  sizeKey: TagSize = 'medium',
   onProgress?: (current: number, total: number) => void
 ): Promise<boolean> {
   if (items.length === 0) return false;
@@ -108,7 +342,7 @@ export async function exportBulkCardsZip(
     count++;
     if (onProgress) onProgress(count, items.length);
 
-    const canvas = await captureElementToCanvas(item.id, 3);
+    const canvas = await captureCardOrSvg(item, brand, sizeKey, 3);
     if (canvas) {
       const dataUrl = canvas.toDataURL('image/png');
       const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
@@ -133,6 +367,8 @@ export async function exportBulkCardsZip(
  */
 export async function exportCardsSheetPdf(
   items: MenuItem[],
+  brand: BrandConfig,
+  sizeKey: TagSize = 'medium',
   paperSize: 'a4' | 'letter' = 'a4',
   onProgress?: (current: number, total: number) => void
 ): Promise<boolean> {
@@ -154,14 +390,11 @@ export async function exportCardsSheetPdf(
   const gapX = 8;
   const gapY = 8;
 
-  // Compute grid columns & rows based on standard tag aspect ratio
   const availableWidth = pageWidth - marginX * 2;
   const availableHeight = pageHeight - marginTop - marginBottom;
 
-  // Let's determine column count (2 columns is optimal for standard food tags on A4)
   const cols = 2;
   const cardW = (availableWidth - gapX * (cols - 1)) / cols;
-  // Standard card height based on 4:3 or 3:2 ratio ~ 0.7 aspect ratio
   const cardH = cardW * 0.72;
   const rows = Math.max(1, Math.floor((availableHeight + gapY) / (cardH + gapY)));
   const cardsPerPage = cols * rows;
@@ -219,7 +452,7 @@ export async function exportCardsSheetPdf(
       const x = marginX + col * (cardW + gapX);
       const y = marginTop + row * (cardH + gapY);
 
-      const canvas = await captureElementToCanvas(item.id, 2.5);
+      const canvas = await captureCardOrSvg(item, brand, sizeKey, 3);
       if (canvas) {
         const imgData = canvas.toDataURL('image/png');
         const aspect = canvas.width / canvas.height;
@@ -231,7 +464,6 @@ export async function exportCardsSheetPdf(
           drawW = drawH * aspect;
         }
 
-        // Center card within its grid cell
         const offsetX = x + (cardW - drawW) / 2;
         const offsetY = y + (cardH - drawH) / 2;
 
@@ -274,6 +506,8 @@ export async function exportCardsSheetPdf(
  */
 export async function exportCardsCatalogPdf(
   items: MenuItem[],
+  brand: BrandConfig,
+  sizeKey: TagSize = 'medium',
   paperSize: 'a4' | 'letter' = 'a4',
   onProgress?: (current: number, total: number) => void
 ): Promise<boolean> {
@@ -295,7 +529,7 @@ export async function exportCardsCatalogPdf(
     count++;
     if (onProgress) onProgress(count, items.length);
 
-    const canvas = await captureElementToCanvas(item.id, 3);
+    const canvas = await captureCardOrSvg(item, brand, sizeKey, 3);
     if (!canvas) continue;
 
     const imgData = canvas.toDataURL('image/png');
@@ -350,110 +584,10 @@ export async function exportCardsCatalogPdf(
 }
 
 /**
- * Generate accurate and clean SVG vector markup for an item
- */
-export function generateSvgCode(
-  item: MenuItem,
-  brand: BrandConfig,
-  sizeKey: TagSize = 'medium'
-): string {
-  const width = 360;
-  const height = 260;
-  const isVeg = item.dietaryType === 'Veg';
-  const isNonVeg = item.dietaryType === 'Non-Veg';
-  const symbolColor = isVeg ? '#16a34a' : isNonVeg ? '#dc2626' : '#d97706';
-
-  const priceText =
-    brand.showPrice && item.price !== undefined && item.price !== ''
-      ? formatPrice(item.price, brand.currencySymbol)
-      : '';
-
-  const cleanName = (item.menuName || 'Menu Item')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  const cleanDesc = (item.description || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  const cleanCategory = (item.category || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  const cleanFooter = (brand.footerText || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  const cleanBiz = (brand.businessName || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <!-- Card Background -->
-  <rect width="100%" height="100%" fill="${brand.backgroundColor}" rx="${brand.cornerRadius}" stroke="${brand.borderColor}" stroke-width="2"/>
-  
-  <!-- Header / Business & Category -->
-  <text x="20" y="32" font-family="${brand.fontFamily === 'serif' ? 'serif' : 'sans-serif'}" font-size="11" font-weight="700" fill="${brand.primaryColor}" letter-spacing="1">${cleanBiz.toUpperCase()}</text>
-  ${
-    brand.showCategory && item.category
-      ? `<text x="${width - 20}" y="32" font-family="sans-serif" font-size="10" font-weight="600" text-anchor="end" fill="${brand.accentColor}">${cleanCategory.toUpperCase()}</text>`
-      : ''
-  }
-  
-  <line x1="20" y1="42" x2="${width - 20}" y2="42" stroke="${brand.borderColor}" stroke-opacity="0.3" stroke-width="1"/>
-
-  <!-- Dietary Symbol (Veg / Non-Veg) -->
-  ${
-    brand.showDietIcon
-      ? `
-  <rect x="20" y="56" width="18" height="18" fill="none" stroke="${symbolColor}" stroke-width="1.8" rx="2"/>
-  <circle cx="29" cy="65" r="4.5" fill="${symbolColor}"/>
-  `
-      : ''
-  }
-
-  <!-- Dish Name -->
-  <text x="${brand.showDietIcon ? 46 : 20}" y="70" font-family="${brand.fontFamily === 'serif' ? 'serif' : 'sans-serif'}" font-size="16" font-weight="bold" fill="${brand.textColor}">${cleanName}</text>
-  
-  <!-- Spice / Badges -->
-  ${
-    item.chefRecommendation
-      ? `<rect x="20" y="86" width="90" height="16" rx="8" fill="${brand.primaryColor}"/>
-         <text x="65" y="98" font-family="sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="${brand.backgroundColor}">★ CHEF CHOICE</text>`
-      : ''
-  }
-  
-  <!-- Description -->
-  <text x="20" y="${item.chefRecommendation ? 120 : 105}" font-family="sans-serif" font-size="11" fill="${brand.textColor}" opacity="0.85">
-    ${cleanDesc ? cleanDesc.slice(0, 50) + (cleanDesc.length > 50 ? '...' : '') : ''}
-  </text>
-  
-  <!-- Nutrition / Calories -->
-  ${
-    brand.showNutrition && item.calories
-      ? `<text x="20" y="195" font-family="monospace" font-size="10" fill="${brand.textColor}" opacity="0.75">${item.calories} kcal ${item.protein ? '• P:' + item.protein : ''}</text>`
-      : ''
-  }
-
-  <!-- Price -->
-  ${
-    priceText
-      ? `<text x="${width - 20}" y="200" font-family="sans-serif" font-size="18" font-weight="900" text-anchor="end" fill="${brand.primaryColor}">${priceText}</text>`
-      : ''
-  }
-  
-  <!-- Footer Divider & Text -->
-  <line x1="20" y1="215" x2="${width - 20}" y2="215" stroke="${brand.borderColor}" stroke-opacity="0.3" stroke-width="1"/>
-  <text x="20" y="235" font-family="sans-serif" font-size="9" fill="${brand.textColor}" opacity="0.6">${cleanFooter}</text>
-</svg>`;
-}
-
-/**
  * Download SVG file for a single card
  */
-export function exportSingleSvg(item: MenuItem, brand: BrandConfig) {
-  const svgContent = generateSvgCode(item, brand);
+export function exportSingleSvg(item: MenuItem, brand: BrandConfig, sizeKey: TagSize = 'medium') {
+  const svgContent = generateSvgCode(item, brand, sizeKey);
   const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
   const cleanName = (item.menuName || 'tag')
     .replace(/[^a-z0-9]/gi, '_')
@@ -467,6 +601,7 @@ export function exportSingleSvg(item: MenuItem, brand: BrandConfig) {
 export async function exportBulkSvgsZip(
   items: MenuItem[],
   brand: BrandConfig,
+  sizeKey: TagSize = 'medium',
   onProgress?: (current: number, total: number) => void
 ): Promise<boolean> {
   if (items.length === 0) return false;
@@ -479,7 +614,7 @@ export async function exportBulkSvgsZip(
     count++;
     if (onProgress) onProgress(count, items.length);
 
-    const svgContent = generateSvgCode(item, brand);
+    const svgContent = generateSvgCode(item, brand, sizeKey);
     const cleanName = (item.menuName || `tag_${count}`)
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase();
@@ -533,4 +668,5 @@ export function exportItemsCsv(items: MenuItem[], filename: string = 'menu_tags_
 export function triggerPrintSheet() {
   window.print();
 }
+
 

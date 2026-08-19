@@ -279,7 +279,8 @@ export default function App() {
       <div
         id="offscreen-export-cache"
         aria-hidden="true"
-        className="fixed pointer-events-none -left-[9999px] -top-[9999px] opacity-0"
+        className="fixed pointer-events-none"
+        style={{ left: '-9999px', top: '0px', opacity: 1, visibility: 'visible', zIndex: -9999 }}
       >
         {items.map((item) => (
           <div key={item.id} id={`export-card-${item.id}`}>

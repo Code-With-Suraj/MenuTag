@@ -55,7 +55,7 @@ export const PrintSheetView: React.FC<PrintSheetViewProps> = ({
     setPdfSuccess(null);
     try {
       const format = paperSize === 'LETTER' ? 'letter' : 'a4';
-      await exportCardsSheetPdf(items, format);
+      await exportCardsSheetPdf(items, brandConfig, selectedSize, format);
       setPdfSuccess(`Print-ready ${paperSize} PDF downloaded!`);
       setTimeout(() => setPdfSuccess(null), 4000);
     } catch (e) {
