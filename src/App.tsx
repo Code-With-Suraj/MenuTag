@@ -10,6 +10,7 @@ import { ExportModal } from './components/ExportModal';
 import { TemplateGallery } from './components/TemplateGallery';
 import { CsvGuide } from './components/CsvGuide';
 import { FaqSection } from './components/FaqSection';
+import { MenuCard } from './components/MenuCard';
 
 import { MenuItem, TemplateId, TagSize, BrandConfig } from './types';
 import { TEMPLATES } from './data/templates';
@@ -254,6 +255,7 @@ export default function App() {
       {isExportModalOpen && (
         <ExportModal
           items={selectedItems.length > 0 ? selectedItems : items}
+          allItems={items}
           selectedTemplate={selectedTemplate}
           selectedSize={selectedSize}
           brandConfig={brandConfig}
@@ -272,6 +274,25 @@ export default function App() {
           onClose={() => setIsPrintSheetOpen(false)}
         />
       )}
+
+      {/* Dedicated Off-screen Render Container for Guaranteed 100% Export Capture */}
+      <div
+        id="offscreen-export-cache"
+        aria-hidden="true"
+        className="fixed pointer-events-none -left-[9999px] -top-[9999px] opacity-0"
+      >
+        {items.map((item) => (
+          <div key={item.id} id={`export-card-${item.id}`}>
+            <MenuCard
+              item={item}
+              sizeKey={selectedSize}
+              brand={brandConfig}
+              templateId={selectedTemplate}
+              cardElementId={`export-card-inner-${item.id}`}
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-400 print:hidden">

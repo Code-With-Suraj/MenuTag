@@ -1,1 +1,56 @@
 @import "tailwindcss";
+
+@media print {
+  html, body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire default web layout during print */
+  header,
+  footer,
+  nav,
+  .print\:hidden,
+  #root > div > header,
+  #root > div > main,
+  #root > div > footer {
+    display: none !important;
+  }
+
+  /* Printable Sheet Root Container */
+  .printable-sheet-root {
+    display: block !important;
+    position: static !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .printable-sheet-page {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #ffffff !important;
+  }
+
+  .printable-sheet-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 6mm;
+  }
+}
