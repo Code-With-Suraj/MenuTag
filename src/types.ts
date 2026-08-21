@@ -59,6 +59,7 @@ export type FontFamilyType = 'serif' | 'sans' | 'display' | 'mono';
 export interface BrandConfig {
   businessName: string;
   logoUrl?: string;
+  logoEmblem?: string; // e.g. 'utensils' | 'chef-hat' | 'crown' | 'coffee' | 'cake' | 'leaf' | 'sparkles' | 'flame'
   footerText?: string;
   website?: string;
   primaryColor: string;

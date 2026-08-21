@@ -19,6 +19,11 @@ import {
   Leaf,
   Clock,
   Scissors,
+  Utensils,
+  Crown,
+  Coffee,
+  ChefHat,
+  CakeSlice,
 } from 'lucide-react';
 
 interface MenuCardProps {
@@ -192,6 +197,59 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     );
   };
 
+  // Brand Logo / Emblem Renderer
+  const renderBrandLogo = () => {
+    if (brand.showLogo === false) return null;
+
+    if (brand.logoUrl) {
+      return (
+        <div className="flex items-center flex-shrink-0">
+          <img
+            src={brand.logoUrl}
+            alt="Brand Logo"
+            crossOrigin="anonymous"
+            className="h-6 sm:h-7 max-w-[130px] w-auto object-contain flex-shrink-0 filter drop-shadow-xs"
+            style={{ maxHeight: '28px' }}
+          />
+        </div>
+      );
+    }
+
+    // Built-in emblem icon based on template or choice
+    const emblem = brand.logoEmblem || (
+      templateId === 'bakery-artisanal' ? 'cake' :
+      templateId === 'luxury-restaurant' ? 'crown' :
+      templateId === 'modern-cafe' ? 'coffee' :
+      templateId === 'street-food' ? 'flame' :
+      templateId === 'hotel-buffet' ? 'chef-hat' :
+      templateId === 'wedding-buffet' ? 'crown' :
+      templateId === 'corporate-cafeteria' ? 'leaf' :
+      templateId === 'kids-menu' ? 'sparkles' :
+      'utensils'
+    );
+
+    return (
+      <div
+        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 shadow-xs border"
+        style={{
+          backgroundColor: `${brand.primaryColor}22`,
+          color: brand.primaryColor,
+          borderColor: `${brand.primaryColor}55`,
+        }}
+        title="Brand Logo"
+      >
+        {emblem === 'chef-hat' && <ChefHat className="w-3.5 h-3.5" />}
+        {emblem === 'crown' && <Crown className="w-3.5 h-3.5" />}
+        {emblem === 'coffee' && <Coffee className="w-3.5 h-3.5" />}
+        {emblem === 'cake' && <CakeSlice className="w-3.5 h-3.5" />}
+        {emblem === 'leaf' && <Leaf className="w-3.5 h-3.5" />}
+        {emblem === 'sparkles' && <Sparkles className="w-3.5 h-3.5" />}
+        {emblem === 'flame' && <Flame className="w-3.5 h-3.5" />}
+        {(!emblem || emblem === 'utensils') && <Utensils className="w-3.5 h-3.5" />}
+      </div>
+    );
+  };
+
   // Border Style CSS Mapper
   const getBorderClasses = () => {
     switch (brand.borderStyle) {
@@ -233,26 +291,20 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         {/* Top Header Row: Business Name / Logo & Category */}
         <div className="flex items-center justify-between gap-2 border-b pb-2" style={{ borderColor: `${brand.borderColor}40` }}>
           <div className="flex items-center gap-2 min-w-0">
-            {brand.showLogo && brand.logoUrl && (
-              <img
-                src={brand.logoUrl}
-                alt="Logo"
-                className="w-5 h-5 object-contain flex-shrink-0"
-              />
-            )}
-            {brand.showBusinessName && (
+            {renderBrandLogo()}
+            {brand.showBusinessName !== false && (
               <span
                 className="font-bold text-[11px] uppercase tracking-wider truncate"
                 style={{ color: brand.primaryColor }}
               >
-                {brand.businessName}
+                {brand.businessName || 'MENU TAG STUDIO'}
               </span>
             )}
           </div>
 
-          {brand.showCategory && item.category && (
+          {brand.showCategory !== false && item.category && (
             <span
-              className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded"
+              className="text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded flex-shrink-0"
               style={{ backgroundColor: `${brand.accentColor}20`, color: brand.accentColor }}
             >
               {item.category}

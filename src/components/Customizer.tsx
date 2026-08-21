@@ -260,66 +260,132 @@ export const Customizer: React.FC<CustomizerProps> = ({
 
         {/* 3. BRANDING & LOGO TAB */}
         {activeTab === 'branding' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label className="text-slate-300 font-semibold block mb-1">Business Name / Restaurant:</label>
-              <input
-                type="text"
-                value={brandConfig.businessName}
-                onChange={(e) => onUpdateBrandConfig({ businessName: e.target.value })}
-                placeholder="e.g. L'Aura Fine Dining"
-                className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
-              />
+          <div className="space-y-4 text-xs">
+            {/* Header Toggles: Show Logo & Show Business Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showLogo !== false}
+                  onChange={(e) => onUpdateBrandConfig({ showLogo: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200 font-semibold">Show Brand Logo / Emblem Icon</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showBusinessName !== false}
+                  onChange={(e) => onUpdateBrandConfig({ showBusinessName: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200 font-semibold">Show Business / Restaurant Name</span>
+              </label>
             </div>
 
-            <div>
-              <label className="text-slate-300 font-semibold block mb-1">Upload Brand Logo (PNG / SVG):</label>
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Business Name / Restaurant:</label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                  id="brand-logo-input"
+                  type="text"
+                  value={brandConfig.businessName}
+                  onChange={(e) => onUpdateBrandConfig({ businessName: e.target.value })}
+                  placeholder="e.g. L'Aura Fine Dining"
+                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
                 />
-                <label
-                  htmlFor="brand-logo-input"
-                  className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer flex items-center gap-1.5 font-medium"
-                >
-                  <Upload className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{brandConfig.logoUrl ? 'Change Logo' : 'Upload Logo'}</span>
-                </label>
-                {brandConfig.logoUrl && (
-                  <button
-                    onClick={() => onUpdateBrandConfig({ logoUrl: undefined })}
-                    className="text-[11px] text-red-400 hover:underline"
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Upload Brand Logo / Image:</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    id="brand-logo-input"
+                  />
+                  <label
+                    htmlFor="brand-logo-input"
+                    className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer flex items-center gap-1.5 font-medium"
                   >
-                    Remove Logo
-                  </button>
-                )}
+                    <Upload className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{brandConfig.logoUrl ? 'Change Image' : 'Upload Custom Logo'}</span>
+                  </label>
+                  {brandConfig.logoUrl && (
+                    <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                      <img
+                        src={brandConfig.logoUrl}
+                        alt="Logo preview"
+                        className="h-6 w-auto max-w-[60px] object-contain rounded bg-slate-900 px-1"
+                      />
+                      <button
+                        onClick={() => onUpdateBrandConfig({ logoUrl: undefined })}
+                        className="text-[11px] text-red-400 hover:underline px-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
+            {/* Logo Emblem Presets */}
             <div>
-              <label className="text-slate-300 font-semibold block mb-1">Footer Slogan / Text:</label>
-              <input
-                type="text"
-                value={brandConfig.footerText || ''}
-                onChange={(e) => onUpdateBrandConfig({ footerText: e.target.value })}
-                placeholder="e.g. Executive Chef Selection • Fresh Daily"
-                className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
-              />
+              <label className="text-slate-300 font-semibold block mb-1.5">
+                Or Select Brand Emblem Icon:
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'crown', label: '👑 Crown' },
+                  { id: 'chef-hat', label: '👨‍🍳 Chef Hat' },
+                  { id: 'utensils', label: '🍴 Utensils' },
+                  { id: 'coffee', label: '☕ Coffee' },
+                  { id: 'cake', label: '🍰 Bakery' },
+                  { id: 'leaf', label: '🌱 Organic' },
+                  { id: 'sparkles', label: '✨ Luxury' },
+                  { id: 'flame', label: '🔥 Grill/Spicy' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onUpdateBrandConfig({ logoEmblem: item.id, logoUrl: undefined, showLogo: true })}
+                    className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                      (brandConfig.logoEmblem === item.id && !brandConfig.logoUrl)
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-sm font-bold'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div>
-              <label className="text-slate-300 font-semibold block mb-1">Website / Ordering URL:</label>
-              <input
-                type="text"
-                value={brandConfig.website || ''}
-                onChange={(e) => onUpdateBrandConfig({ website: e.target.value })}
-                placeholder="e.g. www.laurarestaurant.com"
-                className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Footer Slogan / Text:</label>
+                <input
+                  type="text"
+                  value={brandConfig.footerText || ''}
+                  onChange={(e) => onUpdateBrandConfig({ footerText: e.target.value })}
+                  placeholder="e.g. Executive Chef Selection • Fresh Daily"
+                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Website / QR Link:</label>
+                <input
+                  type="text"
+                  value={brandConfig.website || ''}
+                  onChange={(e) => onUpdateBrandConfig({ website: e.target.value })}
+                  placeholder="e.g. https://www.laurarestaurant.com"
+                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -554,6 +620,26 @@ export const Customizer: React.FC<CustomizerProps> = ({
 
             {/* Other Display Toggles Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showLogo !== false}
+                  onChange={(e) => onUpdateBrandConfig({ showLogo: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200 font-medium">Brand Logo 👑☕</span>
+              </label>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
+                <input
+                  type="checkbox"
+                  checked={brandConfig.showBusinessName !== false}
+                  onChange={(e) => onUpdateBrandConfig({ showBusinessName: e.target.checked })}
+                  className="accent-amber-500 rounded w-4 h-4"
+                />
+                <span className="text-slate-200 font-medium">Business Name 🏷️</span>
+              </label>
+
               <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:bg-slate-800/50">
                 <input
                   type="checkbox"

@@ -275,15 +275,26 @@ export default function App() {
         />
       )}
 
-      {/* Dedicated Off-screen Render Container for Guaranteed 100% Export Capture */}
+      {/* Dedicated Live Render Sandbox for Guaranteed 100% Export Capture */}
       <div
         id="offscreen-export-cache"
         aria-hidden="true"
         className="fixed pointer-events-none"
-        style={{ left: '-9999px', top: '0px', opacity: 1, visibility: 'visible', zIndex: -9999 }}
+        style={{
+          position: 'fixed',
+          left: '-10000px',
+          top: '0px',
+          width: '2400px',
+          opacity: 1,
+          visibility: 'visible',
+          zIndex: -99999,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
       >
         {items.map((item) => (
-          <div key={item.id} id={`export-card-${item.id}`}>
+          <div key={item.id} id={`live-export-card-${item.id}`}>
             <MenuCard
               item={item}
               sizeKey={selectedSize}

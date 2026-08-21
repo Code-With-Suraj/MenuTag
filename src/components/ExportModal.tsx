@@ -75,6 +75,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         targetItems,
         brandConfig,
         selectedSize,
+        selectedTemplate,
         paperSize,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
@@ -109,6 +110,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         targetItems,
         brandConfig,
         selectedSize,
+        selectedTemplate,
         paperSize,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
@@ -143,6 +145,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         targetItems,
         brandConfig,
         selectedSize,
+        selectedTemplate,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
           setProgressPercent(pct);
@@ -176,6 +179,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         targetItems,
         brandConfig,
         selectedSize,
+        selectedTemplate,
         (current, total) => {
           const pct = Math.round((current / total) * 100);
           setProgressPercent(pct);
@@ -224,6 +228,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         item,
         brandConfig,
         selectedSize,
+        selectedTemplate,
         `menu_tag_${cleanName}.png`
       );
       if (success) {
@@ -243,7 +248,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     const item = targetItems.find((i) => i.id === singleDishId) || targetItems[0];
     if (!item) return;
     resetStatus();
-    exportSingleSvg(item, brandConfig, selectedSize);
+    exportSingleSvg(item, brandConfig, selectedSize, selectedTemplate);
     setExportComplete(`Downloaded SVG vector for "${item.menuName}"!`);
   };
 
