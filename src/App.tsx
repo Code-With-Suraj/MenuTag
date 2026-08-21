@@ -307,18 +307,47 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-400 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>Menu Tag Studio • Bulk Food Tag & Menu Card Studio. 100% Client-Side Generator.</p>
-          <div className="flex items-center gap-4 text-slate-400">
-            <button onClick={() => setActiveTab('guide')} className="hover:underline">
+      <footer className="border-t border-slate-800/80 bg-slate-950/95 py-8 text-xs text-slate-400 print:hidden mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-slate-200">Menu Tag Studio</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                Bulk Generator
+              </span>
+            </div>
+            <span className="hidden sm:inline text-slate-600">•</span>
+            <p className="text-slate-400 text-xs">
+              Professional Menu Tags & Buffet Labels
+            </p>
+          </div>
+
+          {/* Attribution to Suraj Automation */}
+          <div className="flex items-center gap-2 text-slate-300 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800 shadow-xs">
+            <span>Built by</span>
+            <a
+              href="http://surajdx.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5 underline decoration-amber-500/40 underline-offset-4 hover:decoration-amber-400"
+            >
+              <span>Suraj Automation</span>
+              <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+                surajdx.com
+              </span>
+            </a>
+          </div>
+
+          {/* Quick Nav links */}
+          <div className="flex items-center gap-5 text-slate-400">
+            <button onClick={() => setActiveTab('guide')} className="hover:text-slate-200 hover:underline transition-colors">
               CSV Format
             </button>
-            <button onClick={() => setActiveTab('templates')} className="hover:underline">
-              Templates
+            <button onClick={() => setActiveTab('templates')} className="hover:text-slate-200 hover:underline transition-colors">
+              8 Templates
             </button>
-            <button onClick={() => setActiveTab('faq')} className="hover:underline">
-              Print Tips
+            <button onClick={() => setActiveTab('faq')} className="hover:text-slate-200 hover:underline transition-colors">
+              Print Guide
             </button>
           </div>
         </div>

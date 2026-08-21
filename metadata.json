@@ -1,6 +1,6 @@
 {
-  "name": "Menu Tag Studio - Bulk Menu Card & Label Generator",
-  "description": "Bulk generate professional, print-ready food tags, buffet labels, QR menu cards, and counter displays from CSV.",
+  "name": "Menu Tag Studio — Built by Suraj Automation",
+  "description": "Bulk generate professional, print-ready food tags, buffet labels, QR menu cards, and counter displays from CSV. Built by Suraj Automation (http://surajdx.com).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
