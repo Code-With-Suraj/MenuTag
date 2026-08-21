@@ -80,7 +80,10 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
-              <span>8 Design Templates</span>
+              <span>26 Pro Templates</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30">
+                3D
+              </span>
             </button>
 
             <button

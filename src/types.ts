@@ -32,7 +32,21 @@ export interface MenuItem {
   rawRow?: Record<string, any>;
 }
 
+export type TemplateCategory =
+  | 'all'
+  | 'premium'
+  | 'events'
+  | 'hospitality'
+  | 'food-catering'
+  | 'modern-digital';
+
 export type TemplateId =
+  // 4 Reference Signature Styles (from image showcase)
+  | 'laura-fine-dining'
+  | 'bistro-cafe'
+  | 'la-patisserie'
+  | 'taco-truck'
+  // Existing 8 Pro Templates
   | 'luxury-restaurant'
   | 'modern-cafe'
   | 'bakery-artisanal'
@@ -40,9 +54,36 @@ export type TemplateId =
   | 'hotel-buffet'
   | 'wedding-buffet'
   | 'corporate-cafeteria'
-  | 'kids-menu';
+  | 'kids-menu'
+  // 17 New Professional & 3D Templates
+  | 'modern-minimal'
+  | 'glassmorphism-3d'
+  | 'premium-3d-luxury'
+  | 'floating-3d-card'
+  | 'modern-event-night'
+  | 'corporate-premium'
+  | 'contemporary-restaurant'
+  | 'organic-farm-fresh'
+  | 'indian-royal'
+  | 'indian-heritage'
+  | 'indian-street-food'
+  | 'futuristic-tech'
+  | 'premium-patisserie'
+  | 'rustic-premium'
+  | 'scandinavian-clean'
+  | 'midnight-gala'
+  | 'social-media-card'
+  | 'wedding-elegance';
 
-export type TagSize = 'small' | 'medium' | 'large' | 'tent-a6' | 'tent-a5' | 'custom';
+export type TagSize =
+  | 'standing-tag'
+  | 'vertical-buffet'
+  | 'small'
+  | 'medium'
+  | 'large'
+  | 'tent-a6'
+  | 'tent-a5'
+  | 'custom';
 
 export interface TagDimensions {
   widthInInches: number;
@@ -126,8 +167,10 @@ export interface TemplateDefinition {
   name: string;
   tagline: string;
   description: string;
+  category: 'premium' | 'events' | 'hospitality' | 'food-catering' | 'modern-digital';
   previewBg: string;
   accentColor: string;
+  is3D?: boolean;
   defaultBrandConfig: Partial<BrandConfig>;
   suitableFor: string[];
 }

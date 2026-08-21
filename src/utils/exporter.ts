@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import { MenuItem, BrandConfig, TagSize, TemplateId } from '../types';
 import { formatPrice } from './format';
+import { TAG_SIZES } from '../data/templates';
 
 /**
  * Locate a card DOM element across various possible mount points
@@ -76,7 +77,7 @@ function getEmblemSvg(emblem: string, color: string): string {
 }
 
 /**
- * High-fidelity SVG vector markup generator matching exact card styling
+ * High-fidelity SVG vector markup generator matching exact card styling with fluid proportional scaling
  */
 export function generateSvgCode(
   item: MenuItem,
@@ -84,8 +85,30 @@ export function generateSvgCode(
   sizeKey: TagSize = 'medium',
   templateId?: TemplateId
 ): string {
-  const width = 380;
-  const height = 270;
+  const sizeInfo = TAG_SIZES[sizeKey] || TAG_SIZES.medium;
+  const isTent = Boolean(sizeInfo.isTentCard);
+
+  const faceWInches = sizeKey === 'custom' ? brand.customWidthInches || 3.5 : sizeInfo.widthInInches;
+  const faceHInches = isTent
+    ? (sizeKey === 'custom' ? (brand.customHeightInches || 5.0) / 2 : sizeInfo.heightInInches / 2)
+    : (sizeKey === 'custom' ? brand.customHeightInches || 2.5 : sizeInfo.heightInInches);
+
+  const dpi = 96;
+  const width = Math.round(faceWInches * dpi);
+  const height = Math.round(faceHInches * dpi);
+
+  const scaleX = faceWInches / 3.5;
+  const scaleY = faceHInches / 2.5;
+  const scale = Math.max(0.62, Math.min(2.4, Math.sqrt(scaleX * scaleY)));
+
+  const fontTitle = Math.max(10, Math.min(24, Math.round(14.5 * scale)));
+  const fontBody = Math.max(8, Math.min(13, Math.round(9.5 * scale)));
+  const fontSmall = Math.max(7, Math.min(11.5, Math.round(8.5 * scale)));
+  const fontPrice = Math.max(10, Math.min(24, Math.round(14 * scale)));
+  const paddingCard = Math.max(6, Math.min(22, Math.round(12 * scale)));
+  const vegBoxSize = Math.max(11, Math.min(20, Math.round(14 * scale)));
+  const qrDim = Math.max(20, Math.min(56, Math.round(26 * scale)));
+
   const isVeg = item.dietaryType === 'Veg';
   const isNonVeg = item.dietaryType === 'Non-Veg';
   const isVegan = item.dietaryType === 'Vegan' || item.vegan;
@@ -148,47 +171,44 @@ export function generateSvgCode(
   const showQr = brand.showQrCode && (item.qrUrl || brand.website);
 
   // Border styling
-  let borderStrokeWidth = 2;
+  let borderStrokeWidth = Math.max(1, Math.round(2 * scale));
   let strokeDash = '';
   if (brand.borderStyle === 'double') {
-    borderStrokeWidth = 4;
+    borderStrokeWidth = Math.max(2, Math.round(4 * scale));
   } else if (brand.borderStyle === 'dashed' || brand.borderStyle === 'scalloped') {
     strokeDash = 'stroke-dasharray="6,4"';
   } else if (brand.borderStyle === 'none') {
     borderStrokeWidth = 0;
   }
 
+  const headerH = Math.max(24, Math.round(30 * scale));
+  const footerH = Math.max(24, Math.round(34 * scale));
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <defs>
     <style>
-      .biz-title { font-family: ${brand.fontFamily === 'serif' ? 'Playfair Display, Georgia, serif' : 'system-ui, -apple-system, sans-serif'}; font-size: 11px; font-weight: 800; fill: ${brand.primaryColor}; letter-spacing: 1.2px; text-transform: uppercase; }
-      .dish-title { font-family: ${brand.fontFamily === 'serif' ? 'Playfair Display, Georgia, serif' : 'system-ui, -apple-system, sans-serif'}; font-size: 15.5px; font-weight: 800; fill: ${brand.textColor}; }
-      .desc-text { font-family: system-ui, -apple-system, sans-serif; font-size: 10.5px; line-height: 14px; fill: ${brand.textColor}; opacity: 0.88; }
-      .badge-text { font-family: system-ui, -apple-system, sans-serif; font-size: 8.5px; font-weight: 800; fill: #ffffff; letter-spacing: 0.5px; }
-      .price-text { font-family: system-ui, -apple-system, sans-serif; font-size: 16px; font-weight: 900; fill: ${brand.primaryColor}; }
-      .nutri-text { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9.5px; fill: ${brand.textColor}; opacity: 0.8; font-weight: 600; }
-      .footer-text { font-family: system-ui, -apple-system, sans-serif; font-size: 8.5px; fill: ${brand.textColor}; opacity: 0.65; }
+      .biz-title { font-family: ${brand.fontFamily === 'serif' ? 'Playfair Display, Georgia, serif' : 'system-ui, -apple-system, sans-serif'}; font-size: ${fontSmall * 1.1}px; font-weight: 800; fill: ${brand.primaryColor}; letter-spacing: 1.2px; text-transform: uppercase; }
+      .dish-title { font-family: ${brand.fontFamily === 'serif' ? 'Playfair Display, Georgia, serif' : 'system-ui, -apple-system, sans-serif'}; font-size: ${fontTitle}px; font-weight: 800; fill: ${brand.textColor}; }
+      .desc-text { font-family: system-ui, -apple-system, sans-serif; font-size: ${fontBody}px; line-height: ${fontBody * 1.3}px; fill: ${brand.textColor}; opacity: 0.88; }
+      .badge-text { font-family: system-ui, -apple-system, sans-serif; font-size: ${fontSmall * 0.9}px; font-weight: 800; fill: #ffffff; letter-spacing: 0.5px; }
+      .price-text { font-family: system-ui, -apple-system, sans-serif; font-size: ${fontPrice}px; font-weight: 900; fill: ${brand.primaryColor}; }
+      .nutri-text { font-family: ui-monospace, SFMono-Regular, monospace; font-size: ${fontSmall}px; fill: ${brand.textColor}; opacity: 0.8; font-weight: 600; }
+      .footer-text { font-family: system-ui, -apple-system, sans-serif; font-size: ${fontSmall * 0.9}px; fill: ${brand.textColor}; opacity: 0.65; }
     </style>
   </defs>
 
   <!-- Background surface -->
-  <rect x="2" y="2" width="${width - 4}" height="${height - 4}" fill="${brand.backgroundColor || '#0f172a'}" rx="${brand.cornerRadius || 10}" stroke="${brand.borderColor || '#d97706'}" stroke-width="${borderStrokeWidth}" ${strokeDash}/>
-
-  ${
-    brand.borderStyle === 'gold-foil'
-      ? `<rect x="6" y="6" width="${width - 12}" height="${height - 12}" fill="none" rx="${Math.max(2, (brand.cornerRadius || 10) - 4)}" stroke="${brand.primaryColor}" stroke-width="1" stroke-opacity="0.4"/>`
-      : ''
-  }
+  <rect x="2" y="2" width="${width - 4}" height="${height - 4}" fill="${brand.backgroundColor || '#0f172a'}" rx="${Math.max(4, Math.round(brand.cornerRadius * (scale < 0.85 ? 0.75 : 1.0)))}" stroke="${brand.borderColor || '#d97706'}" stroke-width="${borderStrokeWidth}" ${strokeDash}/>
 
   <!-- Header Section -->
-  <g transform="translate(16, 14)">
+  <g transform="translate(${paddingCard}, ${paddingCard})">
     ${
       brand.showLogo !== false
         ? brand.logoUrl
-          ? `<image href="${brand.logoUrl}" x="0" y="-3" width="${brand.showBusinessName !== false ? '75' : '120'}" height="24" preserveAspectRatio="xMinYMid meet"/>`
+          ? `<image href="${brand.logoUrl}" x="0" y="-2" width="${Math.round(80 * scale)}" height="${Math.round(20 * scale)}" preserveAspectRatio="xMinYMid meet"/>`
           : `<g transform="translate(0, 0)">
-               <rect width="20" height="20" rx="4" fill="${brand.primaryColor}" fill-opacity="0.2" stroke="${brand.primaryColor}" stroke-width="1.2"/>
-               <g transform="translate(2, 2) scale(0.66)">
+               <rect width="${Math.round(18 * scale)}" height="${Math.round(18 * scale)}" rx="4" fill="${brand.primaryColor}" fill-opacity="0.2" stroke="${brand.primaryColor}" stroke-width="1.2"/>
+               <g transform="translate(2, 2) scale(${0.55 * scale})">
                  ${getEmblemSvg(chosenEmblem, brand.primaryColor)}
                </g>
              </g>`
@@ -197,112 +217,103 @@ export function generateSvgCode(
 
     ${
       brand.showBusinessName !== false
-        ? `<text x="${brand.showLogo !== false ? (brand.logoUrl ? 82 : 26) : 0}" y="14" class="biz-title">${cleanBiz}</text>`
+        ? `<text x="${brand.showLogo !== false ? (brand.logoUrl ? Math.round(86 * scale) : Math.round(24 * scale)) : 0}" y="${Math.round(13 * scale)}" class="biz-title">${cleanBiz}</text>`
         : ''
     }
 
     ${
       brand.showCategory !== false && item.category
-        ? `<rect x="${width - 32 - (cleanCategory.length * 6 + 16)}" y="-1" width="${cleanCategory.length * 6 + 16}" height="18" rx="4" fill="${brand.accentColor || brand.primaryColor}" fill-opacity="0.15"/>
-           <text x="${width - 32 - (cleanCategory.length * 6 + 8) / 2}" y="12" font-family="system-ui, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle" fill="${brand.accentColor || brand.primaryColor}" letter-spacing="0.8px">${cleanCategory.toUpperCase()}</text>`
+        ? `<rect x="${width - paddingCard * 2 - Math.min(100, cleanCategory.length * 6 + 14)}" y="-1" width="${Math.min(100, cleanCategory.length * 6 + 14)}" height="${Math.round(16 * scale)}" rx="4" fill="${brand.accentColor || brand.primaryColor}" fill-opacity="0.15"/>
+           <text x="${width - paddingCard * 2 - Math.min(100, cleanCategory.length * 6 + 14) / 2}" y="${Math.round(11 * scale)}" font-family="system-ui, sans-serif" font-size="${fontSmall * 0.95}" font-weight="700" text-anchor="middle" fill="${brand.accentColor || brand.primaryColor}" letter-spacing="0.8px">${cleanCategory.toUpperCase()}</text>`
         : ''
     }
   </g>
 
   <!-- Header separator line -->
-  <line x1="16" y1="38" x2="${width - 16}" y2="38" stroke="${brand.borderColor || '#d97706'}" stroke-opacity="0.3" stroke-width="1"/>
+  <line x1="${paddingCard}" y1="${paddingCard + headerH}" x2="${width - paddingCard}" y2="${paddingCard + headerH}" stroke="${brand.borderColor || '#d97706'}" stroke-opacity="0.3" stroke-width="1"/>
 
   <!-- Main Body Section -->
-  <g transform="translate(16, 48)">
-    <!-- Dietary Box Symbol (Veg / Non-Veg / Vegan / Jain) -->
+  <g transform="translate(${paddingCard}, ${paddingCard + headerH + Math.round(8 * scale)})">
+    <!-- Dietary Box Symbol -->
     ${
       brand.showDietIcon
-        ? `<rect x="0" y="2" width="16" height="16" fill="${brand.backgroundColor === '#ffffff' ? '#ffffff' : '#1e293b'}" stroke="${symbolColor}" stroke-width="1.8" rx="3"/>
-           <circle cx="8" cy="10" r="4.2" fill="${symbolColor}"/>`
+        ? `<rect x="0" y="2" width="${vegBoxSize}" height="${vegBoxSize}" fill="${brand.backgroundColor === '#ffffff' ? '#ffffff' : '#1e293b'}" stroke="${symbolColor}" stroke-width="1.8" rx="2"/>
+           <circle cx="${vegBoxSize / 2}" cy="${vegBoxSize / 2 + 2}" r="${vegBoxSize / 3.5}" fill="${symbolColor}"/>`
         : ''
     }
 
     <!-- Dish Title -->
-    <text x="${brand.showDietIcon ? 24 : 0}" y="15" class="dish-title">${cleanName}</text>
+    <text x="${brand.showDietIcon ? vegBoxSize + Math.round(6 * scale) : 0}" y="${Math.round(12 * scale)}" class="dish-title">${cleanName}</text>
     
     ${
       spiceIndicator
-        ? `<text x="${width - 32}" y="14" font-size="12" text-anchor="end">${spiceIndicator}</text>`
+        ? `<text x="${width - paddingCard * 2}" y="${Math.round(12 * scale)}" font-size="${fontSmall * 1.2}" text-anchor="end">${spiceIndicator}</text>`
         : ''
     }
 
     <!-- Badges Row -->
-    <g transform="translate(0, 24)">
+    <g transform="translate(0, ${Math.round(18 * scale)})">
       ${
         item.chefRecommendation
-          ? `<rect x="0" y="0" width="88" height="16" rx="8" fill="#f59e0b"/>
-             <text x="44" y="11" class="badge-text" fill="#0f172a" text-anchor="middle">★ CHEF CHOICE</text>`
+          ? `<rect x="0" y="0" width="${Math.round(76 * scale)}" height="${Math.round(15 * scale)}" rx="6" fill="#f59e0b"/>
+             <text x="${Math.round(38 * scale)}" y="${Math.round(10.5 * scale)}" class="badge-text" fill="#0f172a" text-anchor="middle">★ CHEF CHOICE</text>`
           : item.bestSeller
-          ? `<rect x="0" y="0" width="84" height="16" rx="8" fill="#ea580c"/>
-             <text x="42" y="11" class="badge-text" text-anchor="middle">🔥 BEST SELLER</text>`
+          ? `<rect x="0" y="0" width="${Math.round(72 * scale)}" height="${Math.round(15 * scale)}" rx="6" fill="#ea580c"/>
+             <text x="${Math.round(36 * scale)}" y="${Math.round(10.5 * scale)}" class="badge-text" text-anchor="middle">🔥 BEST SELLER</text>`
           : item.isNew
-          ? `<rect x="0" y="0" width="54" height="16" rx="8" fill="#10b981"/>
-             <text x="27" y="11" class="badge-text" text-anchor="middle">✨ NEW</text>`
+          ? `<rect x="0" y="0" width="${Math.round(50 * scale)}" height="${Math.round(15 * scale)}" rx="6" fill="#10b981"/>
+             <text x="${Math.round(25 * scale)}" y="${Math.round(10.5 * scale)}" class="badge-text" text-anchor="middle">✨ NEW</text>`
           : ''
       }
     </g>
 
     <!-- Description -->
-    <g transform="translate(0, ${item.chefRecommendation || item.bestSeller || item.isNew ? 48 : 30})">
-      <text x="0" y="10" class="desc-text">
-        ${cleanDesc ? (cleanDesc.length > 58 ? cleanDesc.slice(0, 56) + '...' : cleanDesc) : ''}
+    <g transform="translate(0, ${item.chefRecommendation || item.bestSeller || item.isNew ? Math.round(38 * scale) : Math.round(24 * scale)})">
+      <text x="0" y="${Math.round(10 * scale)}" class="desc-text">
+        ${cleanDesc ? (cleanDesc.length > 55 ? cleanDesc.slice(0, 52) + '...' : cleanDesc) : ''}
       </text>
       ${
         brand.showAllergens && item.allergen
-          ? `<text x="0" y="26" font-family="system-ui, sans-serif" font-size="9.5" fill="${brand.textColor}" opacity="0.7">Allergens: ${item.allergen}</text>`
+          ? `<text x="0" y="${Math.round(24 * scale)}" font-family="system-ui, sans-serif" font-size="${fontSmall}" fill="${brand.textColor}" opacity="0.7">Contains: ${item.allergen}</text>`
           : ''
       }
     </g>
   </g>
 
   <!-- Footer Section -->
-  <line x1="16" y1="${height - 48}" x2="${width - 16}" y2="${height - 48}" stroke="${brand.borderColor || '#d97706'}" stroke-opacity="0.3" stroke-width="1"/>
+  <line x1="${paddingCard}" y1="${height - footerH}" x2="${width - paddingCard}" y2="${height - footerH}" stroke="${brand.borderColor || '#d97706'}" stroke-opacity="0.3" stroke-width="1"/>
 
-  <g transform="translate(16, ${height - 40})">
+  <g transform="translate(${paddingCard}, ${height - footerH + Math.round(8 * scale)})">
     <!-- Nutrition / Calories -->
     ${
       brand.showNutrition && (item.calories || item.protein)
-        ? `<text x="0" y="12" class="nutri-text">${item.calories ? item.calories + ' kcal' : ''} ${item.protein ? '• P:' + item.protein : ''} ${item.carbs ? '• C:' + item.carbs : ''}</text>`
+        ? `<text x="0" y="${Math.round(10 * scale)}" class="nutri-text">${item.calories ? item.calories + ' kcal' : ''} ${item.protein ? '• P:' + item.protein : ''}</text>`
         : ''
     }
 
     <!-- Slogan -->
     ${
       cleanFooter
-        ? `<text x="0" y="${brand.showNutrition && (item.calories || item.protein) ? 26 : 18}" class="footer-text">${cleanFooter}</text>`
+        ? `<text x="0" y="${brand.showNutrition && (item.calories || item.protein) ? Math.round(22 * scale) : Math.round(14 * scale)}" class="footer-text">${cleanFooter}</text>`
         : ''
     }
 
     <!-- QR Code & Price -->
-    <g transform="translate(${width - 32}, 0)">
+    <g transform="translate(${width - paddingCard * 2}, 0)">
       ${
         showQr
-          ? `<g transform="translate(-128, -2)">
-               <rect width="28" height="28" fill="#ffffff" rx="4" stroke="#cbd5e1" stroke-width="1"/>
-               <rect x="4" y="4" width="7" height="7" fill="#000000"/>
-               <rect x="5.5" y="5.5" width="4" height="4" fill="#ffffff"/>
-               <rect x="6.5" y="6.5" width="2" height="2" fill="#000000"/>
-               <rect x="17" y="4" width="7" height="7" fill="#000000"/>
-               <rect x="18.5" y="5.5" width="4" height="4" fill="#ffffff"/>
-               <rect x="19.5" y="6.5" width="2" height="2" fill="#000000"/>
-               <rect x="4" y="17" width="7" height="7" fill="#000000"/>
-               <rect x="5.5" y="18.5" width="4" height="4" fill="#ffffff"/>
-               <rect x="6.5" y="19.5" width="2" height="2" fill="#000000"/>
-               <rect x="14" y="14" width="3" height="3" fill="#000000"/>
-               <rect x="20" y="20" width="4" height="4" fill="#000000"/>
+          ? `<g transform="translate(-${qrDim + (priceText ? Math.round(75 * scale) : 0)}, -2)">
+               <rect width="${qrDim}" height="${qrDim}" fill="#ffffff" rx="3" stroke="#cbd5e1" stroke-width="1"/>
+               <rect x="3" y="3" width="${Math.round(qrDim * 0.28)}" height="${Math.round(qrDim * 0.28)}" fill="#000000"/>
+               <rect x="${qrDim - Math.round(qrDim * 0.28) - 3}" y="3" width="${Math.round(qrDim * 0.28)}" height="${Math.round(qrDim * 0.28)}" fill="#000000"/>
+               <rect x="3" y="${qrDim - Math.round(qrDim * 0.28) - 3}" width="${Math.round(qrDim * 0.28)}" height="${Math.round(qrDim * 0.28)}" fill="#000000"/>
              </g>`
           : ''
       }
 
       ${
         priceText
-          ? `<rect x="${showQr ? -92 : -88}" y="-2" width="${showQr ? 92 : 88}" height="28" rx="6" fill="${brand.primaryColor}" fill-opacity="0.15"/>
-             <text x="0" y="18" class="price-text" text-anchor="end">${priceText}</text>`
+          ? `<text x="0" y="${Math.round(14 * scale)}" class="price-text" text-anchor="end">${priceText}</text>`
           : ''
       }
     </g>

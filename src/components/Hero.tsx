@@ -140,23 +140,28 @@ export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) 
               </div>
 
               {/* Template Quick Selection Switcher */}
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-                {TEMPLATES.slice(0, 4).map((tmpl) => (
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin text-xs">
+                {[
+                  { id: 'laura-fine-dining', label: '👑 L’AURA Gold Filigree' },
+                  { id: 'bistro-cafe', label: '🌿 BISTRO Arched Sage' },
+                  { id: 'la-patisserie', label: '🥐 La Pâtisserie French' },
+                  { id: 'taco-truck', label: '🌮 TACO TRUCK Blackboard' },
+                  { id: 'luxury-restaurant', label: '✨ Luxury Fine Dining' },
+                  { id: 'glassmorphism-3d', label: '🧊 Glassmorphism 3D' },
+                  { id: 'premium-3d-luxury', label: '💎 3D Gold Luxury' },
+                ].map((t) => (
                   <button
-                    key={tmpl.id}
+                    key={t.id}
                     onClick={() => {
-                      setActivePreviewTemplate(tmpl.id);
-                      if (tmpl.defaultBrandConfig.currencySymbol) {
-                        setPreviewCurrency(tmpl.defaultBrandConfig.currencySymbol);
-                      }
+                      setActivePreviewTemplate(t.id as TemplateId);
                     }}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all border ${
-                      activePreviewTemplate === tmpl.id
+                      activePreviewTemplate === t.id
                         ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
                         : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
                     }`}
                   >
-                    {tmpl.name}
+                    {t.label}
                   </button>
                 ))}
               </div>
@@ -404,7 +409,7 @@ export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) 
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 relative">
               <div className="text-amber-400 font-mono text-2xl font-black">03</div>
               <h4 className="font-bold text-slate-100 text-sm">Pick Theme & Size</h4>
-              <p className="text-xs text-slate-400">Choose from 8 pro templates, select card sizes (Compact, Medium, Tent Card).</p>
+              <p className="text-xs text-slate-400">Choose from 26 pro templates across 5 categories, select card sizes (Compact, Medium, Tent Card).</p>
             </div>
 
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 relative">
