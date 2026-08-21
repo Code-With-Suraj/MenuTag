@@ -56,7 +56,7 @@ export default function App() {
     showSpiceIcon: true,
     showDietIcon: true,
     showPrice: true,
-    currencySymbol: currentTemplateDef.defaultBrandConfig.currencySymbol || '$',
+    currencySymbol: currentTemplateDef.defaultBrandConfig.currencySymbol || '₹',
     showCategory: true,
     showBadges: true,
     showCropMarks: false,

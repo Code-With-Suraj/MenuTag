@@ -531,7 +531,7 @@ export const Customizer: React.FC<CustomizerProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center text-base border border-amber-500/30">
-                    {brandConfig.currencySymbol || '$'}
+                    {brandConfig.currencySymbol || '₹'}
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-100 text-sm flex items-center gap-1.5">
@@ -539,7 +539,7 @@ export const Customizer: React.FC<CustomizerProps> = ({
                       <Coins className="w-4 h-4 text-amber-400" />
                     </h4>
                     <p className="text-[11px] text-slate-400">
-                      Toggle whether price is displayed on cards & select preferred currency symbol ($ , ₹ , € , £ , ¥ , etc.)
+                      Toggle whether price is displayed on cards & select preferred currency symbol (₹ , $ , € , £ , etc.)
                     </p>
                   </div>
                 </div>
@@ -563,14 +563,14 @@ export const Customizer: React.FC<CustomizerProps> = ({
                 <label className="text-slate-300 font-semibold text-xs block">Select Currency Symbol / Code:</label>
                 <div className="flex flex-wrap gap-1.5 items-center">
                   {[
-                    { code: '$', label: 'USD/CAD/AUD ($)' },
                     { code: '₹', label: 'INR (₹)' },
+                    { code: '$', label: 'USD/CAD/AUD ($)' },
                     { code: '€', label: 'EUR (€)' },
                     { code: '£', label: 'GBP (£)' },
-                    { code: '¥', label: 'JPY/CNY (¥)' },
                     { code: 'AED', label: 'UAE (AED)' },
                     { code: 'SAR', label: 'Saudi (SAR)' },
                     { code: 'Rs.', label: 'Rupees (Rs.)' },
+                    { code: '¥', label: 'JPY/CNY (¥)' },
                     { code: 'C$', label: 'Canada (C$)' },
                     { code: 'A$', label: 'Australia (A$)' },
                     { code: '', label: 'No Symbol' },

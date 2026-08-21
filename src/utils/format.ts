@@ -3,7 +3,7 @@
  */
 export function formatPrice(
   price: string | number | undefined | null,
-  currencySymbol: string = '$'
+  currencySymbol: string = '₹'
 ): string {
   if (price === undefined || price === null || price === '') return '';
 

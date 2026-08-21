@@ -60,7 +60,7 @@ export const TemplateGallery: React.FC<TemplateGalleryProps> = ({
 
                   <div className="flex justify-between items-end text-[11px] font-mono">
                     <span>250 kcal</span>
-                    <span className="font-bold">{tmpl.defaultBrandConfig.currencySymbol || '$'}280</span>
+                    <span className="font-bold">{tmpl.defaultBrandConfig.currencySymbol || '₹'}280</span>
                   </div>
                 </div>
 

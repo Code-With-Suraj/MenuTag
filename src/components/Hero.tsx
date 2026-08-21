@@ -36,7 +36,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) => {
   const [activePreviewTemplate, setActivePreviewTemplate] = useState<TemplateId>('luxury-restaurant');
-  const [previewCurrency, setPreviewCurrency] = useState('$');
+  const [previewCurrency, setPreviewCurrency] = useState('₹');
   const [showPricePreview, setShowPricePreview] = useState(true);
 
   const activeTemplateDef = TEMPLATES.find((t) => t.id === activePreviewTemplate) || TEMPLATES[0];
@@ -130,8 +130,8 @@ export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) 
                     onChange={(e) => setPreviewCurrency(e.target.value)}
                     className="bg-transparent text-amber-400 font-mono font-bold text-xs focus:outline-none cursor-pointer"
                   >
-                    <option value="$">$ (USD)</option>
                     <option value="₹">₹ (INR)</option>
+                    <option value="$">$ (USD)</option>
                     <option value="€">€ (EUR)</option>
                     <option value="£">£ (GBP)</option>
                     <option value="AED">AED</option>

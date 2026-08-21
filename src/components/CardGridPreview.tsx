@@ -192,14 +192,14 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
                   className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-amber-300 font-mono font-bold cursor-pointer"
                   title="Change currency symbol"
                 >
-                  <option value="$">Symbol: $ (USD)</option>
                   <option value="₹">Symbol: ₹ (INR)</option>
+                  <option value="$">Symbol: $ (USD)</option>
                   <option value="€">Symbol: € (EUR)</option>
                   <option value="£">Symbol: £ (GBP)</option>
-                  <option value="¥">Symbol: ¥ (JPY)</option>
                   <option value="AED">Symbol: AED</option>
                   <option value="SAR">Symbol: SAR</option>
                   <option value="Rs.">Symbol: Rs.</option>
+                  <option value="¥">Symbol: ¥ (JPY)</option>
                   <option value="">No Symbol</option>
                 </select>
               )}
