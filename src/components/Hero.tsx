@@ -56,7 +56,7 @@ export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) 
           <div className="lg:col-span-7 space-y-6 text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold shadow-inner">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>TagChef v2.0 • Bulk Food Tag & Menu Card Studio</span>
+              <span>Menu Tag Studio • Bulk Menu Card & Label Generator</span>
               <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-amber-500/20 text-[10px] uppercase font-bold tracking-wider">
                 100% Browser Client-Side
               </span>
@@ -383,7 +383,7 @@ export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
           <div className="text-center max-w-xl mx-auto space-y-1">
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-100">
-              How TagChef Works in 4 Simple Steps
+              How Menu Tag Studio Works in 4 Simple Steps
             </h2>
             <p className="text-xs text-slate-400">From spreadsheet data to laminated buffet tags in under 2 minutes.</p>
           </div>
