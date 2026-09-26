@@ -74,10 +74,62 @@ export default function App() {
     setSelectedTemplate(templateId);
     const tmplDef = TEMPLATES.find((t) => t.id === templateId);
     if (tmplDef && tmplDef.defaultBrandConfig) {
-      setBrandConfig((prev) => ({
-        ...prev,
-        ...tmplDef.defaultBrandConfig,
-      }));
+      setBrandConfig((prev) => {
+        // Collect known template default names so we know if the user customized their restaurant name
+        const knownDefaults = [
+          'L’AURA',
+          "L'AURA",
+          "L'AURA FINE DINING",
+          'BISTRO',
+          'BISTRO CAFÉ',
+          'La Pâtisserie',
+          'ARTISANAL BAKERY',
+          'TACO TRUCK',
+          'L’Aura Fine Dining',
+          'Modern Café & Roastery',
+          'Artisanal French Bakery',
+          'Street Food Bites',
+          'Grand Buffet & Carvery',
+          'The Royal Banquet',
+          'Workplace Café & Deli',
+          'Kids Fun Kitchen',
+          'Modern Bistro',
+          'Studio Glass Lounge',
+          'Prestige Club',
+          'The Floating Lounge',
+          'Midnight Gala Club',
+          'Apex Executive Dining',
+          'The Artisan Table',
+          'Pure Harvest Kitchen',
+          'Shahi Darbar',
+          'Heritage Rasoi',
+          'Chaat Gali Express',
+          'Cyber Cafe Neo',
+          'Le Petit Patisserie',
+          'Rustic Woodfire Grill',
+          'Nordic Fika Room',
+          'The Obsidian Room',
+          'Bite & Share Lounge',
+          'Royal Wedding Feast'
+        ];
+
+        const isUserCustomName = prev.businessName && !knownDefaults.includes(prev.businessName.trim());
+        const isUserCustomFooter = prev.footerText && !knownDefaults.includes(prev.footerText.trim()) &&
+          prev.footerText !== 'FINE DINING' &&
+          prev.footerText !== 'CAFÉ' &&
+          prev.footerText !== 'ARTISANAL BAKERY' &&
+          prev.footerText !== 'FIERY MEXICAN TACOS' &&
+          prev.footerText !== 'Executive Chef Selection • Contains Fresh Ingredients' &&
+          prev.footerText !== 'Executive Chef Selection • Fresh Daily';
+
+        return {
+          ...prev,
+          ...tmplDef.defaultBrandConfig,
+          businessName: isUserCustomName ? prev.businessName : (tmplDef.defaultBrandConfig.businessName || prev.businessName),
+          footerText: isUserCustomFooter ? prev.footerText : (tmplDef.defaultBrandConfig.footerText || prev.footerText),
+          website: prev.website || 'https://menu.studio',
+        };
+      });
     }
   };
 

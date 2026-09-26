@@ -283,7 +283,10 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
                   {/* Select Checkbox & Overlay Action Buttons */}
                   <div className="absolute -top-2 -left-2 z-20 flex items-center gap-1">
                     <button
-                      onClick={() => onToggleSelectItem(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleSelectItem(item.id);
+                      }}
                       className={`w-6 h-6 rounded-lg flex items-center justify-center shadow-lg transition-all ${
                         isChecked
                           ? 'bg-amber-500 text-slate-950 font-bold'
@@ -295,31 +298,44 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
                     </button>
                   </div>
 
-                  <div className="absolute -top-2 -right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                  <div className="absolute -top-2 -right-2 z-20 flex items-center gap-1">
                     <button
-                      onClick={() => setInspectItem(item)}
-                      className="p-1.5 rounded-lg bg-slate-900 text-amber-400 hover:bg-slate-800 shadow-md"
-                      title="Inspect / Quick Edit"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInspectItem(item);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-slate-950/90 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-slate-700 shadow-md flex items-center gap-1 text-[10px] font-bold transition-all"
+                      title="Click to Edit Dish Name, Price, or Description"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Edit2 className="w-3 h-3" />
+                      <span>Edit Dish</span>
                     </button>
                     <button
-                      onClick={() => onDeleteItem(item.id)}
-                      className="p-1.5 rounded-lg bg-slate-900 text-red-400 hover:bg-slate-800 shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteItem(item.id);
+                      }}
+                      className="p-1 rounded-lg bg-slate-950/90 text-red-400 hover:bg-red-500 hover:text-white border border-slate-700 shadow-md transition-all"
                       title="Delete item"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
 
                   {/* Render Menu Card Tag Component */}
-                  <MenuCard
-                    item={item}
-                    sizeKey={selectedSize}
-                    brand={brandConfig}
-                    templateId={selectedTemplate}
-                    cardElementId={`preview-card-${item.id}`}
-                  />
+                  <div
+                    onClick={() => setInspectItem(item)}
+                    className="cursor-pointer"
+                    title="Click card to edit dish name & details"
+                  >
+                    <MenuCard
+                      item={item}
+                      sizeKey={selectedSize}
+                      brand={brandConfig}
+                      templateId={selectedTemplate}
+                      cardElementId={`preview-card-${item.id}`}
+                    />
+                  </div>
                 </div>
               );
             })}

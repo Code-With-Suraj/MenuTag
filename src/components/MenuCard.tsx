@@ -507,28 +507,44 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           {/* Inner Golden Hairline Inset */}
           <div className="absolute top-2 left-2 right-2 bottom-2 border border-amber-500/30 rounded-lg pointer-events-none" />
 
-          {/* Top Centered Header: Crown + L'AURA + FINE DINING */}
+            {/* Top Centered Header: Crown/Logo + Business Name + Footer Slogan */}
           <div className="flex flex-col items-center justify-center text-center relative z-10 pt-1">
-            <Crown
-              style={{ width: `${scCrownSize}px`, height: `${scCrownSize}px` }}
-              className="text-amber-400 mb-1"
-            />
-            <h2
-              className="font-bold tracking-widest text-amber-300 uppercase leading-none font-serif"
-              style={{ fontSize: `${scBrandTitle}px` }}
-            >
-              {brand.businessName || "L'AURA"}
-            </h2>
-            <div className="flex items-center gap-1.5 opacity-90 mt-1">
-              <span className="w-5 h-[1px] bg-amber-400/70 inline-block" />
-              <span
-                className="font-sans font-bold tracking-widest uppercase text-amber-200"
-                style={{ fontSize: `${scSub}px` }}
+            {brand.showLogo !== false && (
+              brand.logoUrl ? (
+                <img
+                  src={brand.logoUrl}
+                  alt="Logo"
+                  crossOrigin="anonymous"
+                  className="object-contain mb-1 filter drop-shadow-sm"
+                  style={{ maxHeight: `${scCrownSize * 1.2}px`, maxWidth: `${scCrownSize * 2.5}px` }}
+                />
+              ) : (
+                <Crown
+                  style={{ width: `${scCrownSize}px`, height: `${scCrownSize}px` }}
+                  className="text-amber-400 mb-1"
+                />
+              )
+            )}
+            {brand.showBusinessName !== false && brand.businessName !== '' && (
+              <h2
+                className="font-bold tracking-widest text-amber-300 uppercase leading-none font-serif"
+                style={{ fontSize: `${scBrandTitle}px` }}
               >
-                {brand.footerText || 'FINE DINING'}
-              </span>
-              <span className="w-5 h-[1px] bg-amber-400/70 inline-block" />
-            </div>
+                {brand.businessName !== undefined ? brand.businessName : "L'AURA"}
+              </h2>
+            )}
+            {brand.footerText && brand.footerText.trim() !== '' && brand.footerText.trim() !== (brand.businessName || "L'AURA").trim() && (
+              <div className="flex items-center gap-1.5 opacity-90 mt-1 max-w-full">
+                <span className="w-5 h-[1px] bg-amber-400/70 inline-block flex-shrink-0" />
+                <span
+                  className="font-sans font-bold tracking-widest uppercase text-amber-200 truncate"
+                  style={{ fontSize: `${scSub}px` }}
+                >
+                  {brand.footerText}
+                </span>
+                <span className="w-5 h-[1px] bg-amber-400/70 inline-block flex-shrink-0" />
+              </div>
+            )}
           </div>
 
           {/* Middle Content: Dish Name, Description, Spice/Kcal, Allergen Coins */}
@@ -605,17 +621,57 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             )}
           </div>
 
-          {/* Bottom Centered Large Gold Price */}
-          {brand.showPrice && item.price !== undefined && item.price !== '' && (
-            <div className="flex flex-col items-center justify-center relative z-10 pt-1 pb-1">
-              <span
-                className="font-bold text-amber-300 font-serif leading-none drop-shadow-md"
-                style={{ fontSize: `${scPrice}px` }}
-              >
-                {formatPrice(item.price, brand.currencySymbol)}
-              </span>
+          {/* Bottom Area: Large Gold Price, Footer Slogan / Website Link, & Luxury QR Code */}
+          <div className="flex items-end justify-between relative z-10 pt-1 pb-0.5 px-1 border-t border-amber-500/25">
+            <div className="flex flex-col items-start justify-end min-w-0 pr-1 flex-1">
+              {brand.footerText && (
+                <span
+                  className="text-amber-200/90 font-serif tracking-wider truncate max-w-full"
+                  style={{ fontSize: `${Math.max(7, Math.round(scMeta * 0.85))}px` }}
+                  title={brand.footerText}
+                >
+                  {brand.footerText}
+                </span>
+              )}
+              {brand.website && (
+                <span
+                  className="text-amber-400/80 font-sans tracking-wide truncate max-w-full"
+                  style={{ fontSize: `${Math.max(6.5, Math.round(scMeta * 0.78))}px` }}
+                  title={brand.website}
+                >
+                  {brand.website.replace(/^https?:\/\//, '')}
+                </span>
+              )}
             </div>
-          )}
+
+            {brand.showPrice && item.price !== undefined && item.price !== '' && (
+              <div className="flex flex-col items-center justify-center px-1">
+                <span
+                  className="font-bold text-amber-300 font-serif leading-none drop-shadow-md whitespace-nowrap"
+                  style={{ fontSize: `${scPrice}px` }}
+                >
+                  {formatPrice(item.price, brand.currencySymbol)}
+                </span>
+              </div>
+            )}
+
+            {brand.showQrCode && (brand.website || item.qrUrl) && (
+              <div
+                className="rounded bg-white p-0.5 shadow-sm border border-amber-400/80 flex-shrink-0 flex items-center justify-center ml-1"
+                style={{
+                  width: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                  height: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                }}
+                title="Scan QR Code"
+              >
+                <QRCodeSVG
+                  value={item.qrUrl || brand.website || 'https://menu.studio'}
+                  size={Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16))) - 4}
+                  level="M"
+                />
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -649,22 +705,38 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             {/* Top Header: BISTRO - CAFÉ - Leaf & Veg Badge */}
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="absolute top-0 right-0">{renderVegSymbol()}</div>
-              <h2
-                className="font-bold tracking-widest text-[#1b4332] uppercase font-serif leading-none"
-                style={{ fontSize: `${scBrandTitle * 1.15}px` }}
-              >
-                {brand.businessName || 'BISTRO'}
-              </h2>
-              <span
-                className="font-sans font-semibold tracking-widest text-[#2d6a4f] uppercase mt-0.5"
-                style={{ fontSize: `${scSub}px` }}
-              >
-                — {brand.footerText || 'CAFÉ'} —
-              </span>
-              <Leaf
-                style={{ width: `${scCrownSize * 0.9}px`, height: `${scCrownSize * 0.9}px` }}
-                className="text-[#2d6a4f] mt-1"
-              />
+              {brand.showBusinessName !== false && brand.businessName !== '' && (
+                <h2
+                  className="font-bold tracking-widest text-[#1b4332] uppercase font-serif leading-none"
+                  style={{ fontSize: `${scBrandTitle * 1.15}px` }}
+                >
+                  {brand.businessName !== undefined ? brand.businessName : 'BISTRO CAFÉ'}
+                </h2>
+              )}
+              {brand.footerText && brand.footerText.trim() !== '' && brand.footerText.trim() !== (brand.businessName || 'BISTRO CAFÉ').trim() && (
+                <span
+                  className="font-sans font-semibold tracking-widest text-[#2d6a4f] uppercase mt-0.5 truncate max-w-full"
+                  style={{ fontSize: `${scSub}px` }}
+                >
+                  — {brand.footerText} —
+                </span>
+              )}
+              {brand.showLogo !== false && (
+                brand.logoUrl ? (
+                  <img
+                    src={brand.logoUrl}
+                    alt="Logo"
+                    crossOrigin="anonymous"
+                    className="object-contain mt-1 filter drop-shadow-xs"
+                    style={{ maxHeight: `${scCrownSize}px`, maxWidth: `${scCrownSize * 2.2}px` }}
+                  />
+                ) : (
+                  <Leaf
+                    style={{ width: `${scCrownSize * 0.9}px`, height: `${scCrownSize * 0.9}px` }}
+                    className="text-[#2d6a4f] mt-1"
+                  />
+                )
+              )}
             </div>
 
             {/* Middle Dish & Descriptions */}
@@ -723,17 +795,57 @@ export const MenuCard: React.FC<MenuCardProps> = ({
               </div>
             </div>
 
-            {/* Bottom Centered Olive Price */}
-            {brand.showPrice && item.price !== undefined && item.price !== '' && (
-              <div className="flex items-center justify-center relative z-10 pt-1 pb-0.5">
-                <span
-                  className="font-bold text-[#1b4332] font-serif leading-none"
-                  style={{ fontSize: `${scPrice}px` }}
-                >
-                  {formatPrice(item.price, brand.currencySymbol)}
-                </span>
+            {/* Bottom Row: Footer Slogan, Olive Price & Sage QR Code */}
+            <div className="flex items-end justify-between relative z-10 pt-1 border-t border-[#8dc6af]/40 px-1">
+              <div className="flex flex-col items-start justify-end min-w-0 pr-1 flex-1">
+                {brand.footerText && (
+                  <span
+                    className="text-[#2d6a4f] font-sans font-semibold tracking-wide truncate max-w-full"
+                    style={{ fontSize: `${Math.max(7, Math.round(scMeta * 0.85))}px` }}
+                    title={brand.footerText}
+                  >
+                    {brand.footerText}
+                  </span>
+                )}
+                {brand.website && (
+                  <span
+                    className="text-[#1b4332]/75 font-sans tracking-tight truncate max-w-full"
+                    style={{ fontSize: `${Math.max(6.5, Math.round(scMeta * 0.78))}px` }}
+                    title={brand.website}
+                  >
+                    {brand.website.replace(/^https?:\/\//, '')}
+                  </span>
+                )}
               </div>
-            )}
+
+              {brand.showPrice && item.price !== undefined && item.price !== '' && (
+                <div className="flex items-center justify-center px-1">
+                  <span
+                    className="font-bold text-[#1b4332] font-serif leading-none whitespace-nowrap"
+                    style={{ fontSize: `${scPrice}px` }}
+                  >
+                    {formatPrice(item.price, brand.currencySymbol)}
+                  </span>
+                </div>
+              )}
+
+              {brand.showQrCode && (brand.website || item.qrUrl) && (
+                <div
+                  className="rounded bg-white p-0.5 shadow-xs border border-[#8dc6af] flex-shrink-0 flex items-center justify-center ml-1"
+                  style={{
+                    width: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                    height: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                  }}
+                  title="Scan QR Code"
+                >
+                  <QRCodeSVG
+                    value={item.qrUrl || brand.website || 'https://menu.studio'}
+                    size={Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16))) - 4}
+                    level="M"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -762,22 +874,38 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             {/* Top Carved Banner & Script Logo */}
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="absolute top-0 right-0">{renderVegSymbol()}</div>
-              <h2
-                className="font-serif italic font-extrabold tracking-wide text-[#451a03] leading-none"
-                style={{ fontSize: `${scBrandTitle * 1.25}px` }}
-              >
-                {brand.businessName || 'La Pâtisserie'}
-              </h2>
-              <span
-                className="font-sans font-bold tracking-widest text-[#78350f] uppercase mt-0.5"
-                style={{ fontSize: `${scSub}px` }}
-              >
-                {brand.footerText || 'ARTISANAL BAKERY'}
-              </span>
-              <CakeSlice
-                style={{ width: `${scCrownSize * 0.9}px`, height: `${scCrownSize * 0.9}px` }}
-                className="text-[#78350f] mt-1"
-              />
+              {brand.showBusinessName !== false && brand.businessName !== '' && (
+                <h2
+                  className="font-serif italic font-extrabold tracking-wide text-[#451a03] leading-none"
+                  style={{ fontSize: `${scBrandTitle * 1.25}px` }}
+                >
+                  {brand.businessName !== undefined ? brand.businessName : 'ARTISANAL BAKERY'}
+                </h2>
+              )}
+              {brand.footerText && brand.footerText.trim() !== '' && brand.footerText.trim() !== (brand.businessName || 'ARTISANAL BAKERY').trim() && (
+                <span
+                  className="font-sans font-bold tracking-widest text-[#78350f] uppercase mt-0.5 truncate max-w-full"
+                  style={{ fontSize: `${scSub}px` }}
+                >
+                  {brand.footerText}
+                </span>
+              )}
+              {brand.showLogo !== false && (
+                brand.logoUrl ? (
+                  <img
+                    src={brand.logoUrl}
+                    alt="Logo"
+                    crossOrigin="anonymous"
+                    className="object-contain mt-1 filter drop-shadow-xs"
+                    style={{ maxHeight: `${scCrownSize}px`, maxWidth: `${scCrownSize * 2.2}px` }}
+                  />
+                ) : (
+                  <CakeSlice
+                    style={{ width: `${scCrownSize * 0.9}px`, height: `${scCrownSize * 0.9}px` }}
+                    className="text-[#78350f] mt-1"
+                  />
+                )
+              )}
             </div>
 
             {/* Middle Content */}
@@ -824,17 +952,57 @@ export const MenuCard: React.FC<MenuCardProps> = ({
               )}
             </div>
 
-            {/* Bottom Centered Chocolate Price with Ornate Bracket */}
-            {brand.showPrice && item.price !== undefined && item.price !== '' && (
-              <div className="flex items-center justify-center relative z-10 pt-1 pb-0.5">
-                <span
-                  className="font-bold text-[#451a03] font-serif leading-none"
-                  style={{ fontSize: `${scPrice}px` }}
-                >
-                  {formatPrice(item.price, brand.currencySymbol)}
-                </span>
+            {/* Bottom Row: Footer Slogan, Chocolate Price & QR Code */}
+            <div className="flex items-end justify-between relative z-10 pt-1 border-t border-[#b45309]/20 px-1">
+              <div className="flex flex-col items-start justify-end min-w-0 pr-1 flex-1">
+                {brand.footerText && (
+                  <span
+                    className="text-[#78350f] font-serif tracking-wide truncate max-w-full"
+                    style={{ fontSize: `${Math.max(7, Math.round(scMeta * 0.85))}px` }}
+                    title={brand.footerText}
+                  >
+                    {brand.footerText}
+                  </span>
+                )}
+                {brand.website && (
+                  <span
+                    className="text-[#9a3412]/80 font-sans tracking-tight truncate max-w-full"
+                    style={{ fontSize: `${Math.max(6.5, Math.round(scMeta * 0.78))}px` }}
+                    title={brand.website}
+                  >
+                    {brand.website.replace(/^https?:\/\//, '')}
+                  </span>
+                )}
               </div>
-            )}
+
+              {brand.showPrice && item.price !== undefined && item.price !== '' && (
+                <div className="flex items-center justify-center px-1">
+                  <span
+                    className="font-bold text-[#451a03] font-serif leading-none whitespace-nowrap"
+                    style={{ fontSize: `${scPrice}px` }}
+                  >
+                    {formatPrice(item.price, brand.currencySymbol)}
+                  </span>
+                </div>
+              )}
+
+              {brand.showQrCode && (brand.website || item.qrUrl) && (
+                <div
+                  className="rounded bg-white p-0.5 shadow-xs border border-[#b45309]/50 flex-shrink-0 flex items-center justify-center ml-1"
+                  style={{
+                    width: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                    height: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                  }}
+                  title="Scan QR Code"
+                >
+                  <QRCodeSVG
+                    value={item.qrUrl || brand.website || 'https://menu.studio'}
+                    size={Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16))) - 4}
+                    level="M"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -874,18 +1042,30 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
           {/* Top Header: Giant Condensed Woodblock Typography */}
           <div className="relative z-10 flex flex-col">
-            <h2
-              className="font-black tracking-tight text-amber-400 uppercase leading-none font-display"
-              style={{ fontSize: `${scBrandTitle * 1.35}px` }}
-            >
-              {brand.businessName || 'TACO TRUCK'}
-            </h2>
-            <h3
-              className="font-black tracking-tight text-orange-500 uppercase leading-tight font-display mt-0.5 break-words line-clamp-2"
-              style={{ fontSize: `${scDishTitle}px` }}
-            >
-              {item.menuName}
-            </h3>
+            {brand.showBusinessName !== false && brand.businessName !== '' && (
+              <h2
+                className="font-black tracking-tight text-amber-400 uppercase leading-none font-display"
+                style={{ fontSize: `${scBrandTitle * 1.35}px` }}
+              >
+                {brand.businessName !== undefined ? brand.businessName : 'TACO TRUCK'}
+              </h2>
+            )}
+            <div className="flex items-center justify-between gap-1 mt-0.5">
+              <h3
+                className="font-black tracking-tight text-orange-500 uppercase leading-tight font-display break-words line-clamp-2"
+                style={{ fontSize: `${scDishTitle}px` }}
+              >
+                {item.menuName}
+              </h3>
+              {brand.footerText && (
+                <span
+                  className="text-amber-200/90 font-mono text-[9px] uppercase tracking-wider truncate max-w-[120px]"
+                  title={brand.footerText}
+                >
+                  {brand.footerText}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Middle Body */}
@@ -932,25 +1112,49 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             )}
           </div>
 
-          {/* Bottom Split Footer: Bold Yellow Price + QR Code */}
-          <div className="flex items-end justify-between relative z-10 pt-1 border-t border-zinc-800">
-            {brand.showPrice && item.price !== undefined && item.price !== '' && (
-              <span
-                className="font-black text-amber-400 font-display leading-none"
-                style={{ fontSize: `${scPrice}px` }}
-              >
-                {formatPrice(item.price, brand.currencySymbol)}
-              </span>
-            )}
+          {/* Bottom Split Footer: Bold Yellow Price, Slogan & Website, and QR Code */}
+          <div className="flex items-end justify-between relative z-10 pt-1 border-t border-zinc-800 px-0.5">
+            <div className="flex flex-col items-start justify-end min-w-0 pr-1.5 flex-1">
+              {brand.showPrice && item.price !== undefined && item.price !== '' && (
+                <span
+                  className="font-black text-amber-400 font-display leading-none whitespace-nowrap"
+                  style={{ fontSize: `${scPrice}px` }}
+                >
+                  {formatPrice(item.price, brand.currencySymbol)}
+                </span>
+              )}
+              {brand.footerText && (
+                <span
+                  className="text-orange-400 font-mono font-bold tracking-tight truncate max-w-full mt-1"
+                  style={{ fontSize: `${Math.max(7, Math.round(scMeta * 0.85))}px` }}
+                  title={brand.footerText}
+                >
+                  {brand.footerText}
+                </span>
+              )}
+              {brand.website && (
+                <span
+                  className="text-amber-200/70 font-mono tracking-tight truncate max-w-full"
+                  style={{ fontSize: `${Math.max(6.5, Math.round(scMeta * 0.78))}px` }}
+                  title={brand.website}
+                >
+                  {brand.website.replace(/^https?:\/\//, '')}
+                </span>
+              )}
+            </div>
 
-            {brand.showQrCode && (
+            {brand.showQrCode && (brand.website || item.qrUrl) && (
               <div
-                className="rounded bg-white p-1 shadow-xs flex-shrink-0"
-                style={{ width: `${scQrDim}px`, height: `${scQrDim}px` }}
+                className="rounded bg-white p-0.5 shadow-xs flex-shrink-0 border border-amber-400 ml-1"
+                style={{
+                  width: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                  height: `${Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16)))}px`,
+                }}
+                title="Scan QR Code"
               >
                 <QRCodeSVG
-                  value={item.qrData || 'https://menu.order'}
-                  size={scQrDim - 8}
+                  value={item.qrUrl || brand.website || 'https://menu.order'}
+                  size={Math.min(scQrDim, Math.max(22, Math.round(faceHeightInches * 16))) - 4}
                   level="M"
                 />
               </div>

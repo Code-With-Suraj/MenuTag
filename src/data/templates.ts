@@ -148,8 +148,8 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#451a03',
     suitableFor: ['French Patisseries', 'Artisan Bakeries', 'Chocolateries', 'Gourmet Dessert Bars'],
     defaultBrandConfig: {
-      businessName: 'La Pâtisserie',
-      footerText: 'ARTISANAL BAKERY',
+      businessName: 'ARTISANAL BAKERY',
+      footerText: 'PARISIAN CONFECTIONERY',
       primaryColor: '#451a03',
       secondaryColor: '#faeed4',
       backgroundColor: '#fdfbf7',

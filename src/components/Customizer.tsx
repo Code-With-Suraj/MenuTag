@@ -222,6 +222,96 @@ export const Customizer: React.FC<CustomizerProps> = ({
                   );
                 })}
               </div>
+
+              {/* Quick Brand Settings for Instant Card Updates */}
+              <div className="mt-3 p-3 rounded-xl bg-slate-950/90 border border-amber-500/40 shadow-inner space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wide">
+                      Instant Edit: Business Name, Footer & QR Link
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('branding')}
+                    className="text-[10px] text-amber-400 hover:text-amber-300 underline font-medium"
+                  >
+                    All Brand Settings →
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div>
+                    <label className="text-slate-300 font-semibold block text-[11px] mb-1">
+                      Business Name / Restaurant:
+                    </label>
+                    <input
+                      type="text"
+                      value={brandConfig.businessName}
+                      onChange={(e) => onUpdateBrandConfig({ businessName: e.target.value })}
+                      placeholder="e.g. L'Aura Fine Dining"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 font-semibold block text-[11px] mb-1">
+                      Footer Slogan / Text:
+                    </label>
+                    <input
+                      type="text"
+                      value={brandConfig.footerText || ''}
+                      onChange={(e) => onUpdateBrandConfig({ footerText: e.target.value })}
+                      placeholder="e.g. FINE DINING • Fresh Daily"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 font-semibold block text-[11px] mb-1">
+                      Website / QR Link:
+                    </label>
+                    <input
+                      type="text"
+                      value={brandConfig.website || ''}
+                      onChange={(e) => onUpdateBrandConfig({ website: e.target.value })}
+                      placeholder="e.g. https://www.laurarestaurant.com"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 pt-1 text-[11px] text-slate-300">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={brandConfig.showBusinessName !== false}
+                      onChange={(e) => onUpdateBrandConfig({ showBusinessName: e.target.checked })}
+                      className="accent-amber-500 rounded"
+                    />
+                    <span>Show Business Name</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={brandConfig.showQrCode}
+                      onChange={(e) => onUpdateBrandConfig({ showQrCode: e.target.checked })}
+                      className="accent-amber-500 rounded"
+                    />
+                    <span>Show QR Code</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={brandConfig.showPrice}
+                      onChange={(e) => onUpdateBrandConfig({ showPrice: e.target.checked })}
+                      className="accent-amber-500 rounded"
+                    />
+                    <span>Show Price</span>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
