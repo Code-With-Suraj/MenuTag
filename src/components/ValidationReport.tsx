@@ -228,7 +228,7 @@ export const ValidationReport: React.FC<ValidationReportProps> = ({ items, onUpd
                             className="p-1 rounded bg-slate-950 border border-slate-700 text-xs text-white"
                           >
                             <option value="Veg">Veg 🟢</option>
-                            <option value="Non-Veg">Non-Veg 🔴</option>
+                            <option value="Non-Veg">Non-Veg 🔺</option>
                             <option value="Vegan">Vegan 🌱</option>
                             <option value="Jain">Jain 🪷</option>
                             <option value="Egg">Egg 🥚</option>

@@ -322,7 +322,7 @@ export const Hero: React.FC<HeroProps> = ({ onLoadSample, onScrollToUploader }) 
               </div>
               <h3 className="font-bold text-base text-slate-100">Dietary & Allergen Auto-Tagging</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Automatically detects Veg 🟢, Non-Veg 🔴, Egg 🥚, Vegan 🌱, and Jain 🪷 tags directly from your CSV text. Renders allergen icons for dairy, gluten, nuts, soy, and shellfish.
+                Automatically detects Veg 🟢, Non-Veg 🔺, Egg 🥚, Vegan 🌱, and Jain 🪷 tags directly from your CSV text. Renders allergen icons for dairy, gluten, nuts, soy, and shellfish.
               </p>
             </div>
 

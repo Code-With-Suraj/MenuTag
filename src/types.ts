@@ -113,6 +113,7 @@ export interface BrandConfig {
   cornerRadius: number; // in pixels
   shadow: 'none' | 'sm' | 'md' | 'lg';
   fontFamily: FontFamilyType;
+  dishTitleScale?: 'normal' | 'prominent' | 'xlarge';
   // Display Toggles
   showLogo: boolean;
   showBusinessName: boolean;

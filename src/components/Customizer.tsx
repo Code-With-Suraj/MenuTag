@@ -282,34 +282,76 @@ export const Customizer: React.FC<CustomizerProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 pt-1 text-[11px] text-slate-300">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={brandConfig.showBusinessName !== false}
-                      onChange={(e) => onUpdateBrandConfig({ showBusinessName: e.target.checked })}
-                      className="accent-amber-500 rounded"
-                    />
-                    <span>Show Business Name</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={brandConfig.showQrCode}
-                      onChange={(e) => onUpdateBrandConfig({ showQrCode: e.target.checked })}
-                      className="accent-amber-500 rounded"
-                    />
-                    <span>Show QR Code</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={brandConfig.showPrice}
-                      onChange={(e) => onUpdateBrandConfig({ showPrice: e.target.checked })}
-                      className="accent-amber-500 rounded"
-                    />
-                    <span>Show Price</span>
-                  </label>
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-800 text-[11px] text-slate-300">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={brandConfig.showBusinessName !== false}
+                        onChange={(e) => onUpdateBrandConfig({ showBusinessName: e.target.checked })}
+                        className="accent-amber-500 rounded"
+                      />
+                      <span>Show Business Name</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={brandConfig.showQrCode}
+                        onChange={(e) => onUpdateBrandConfig({ showQrCode: e.target.checked })}
+                        className="accent-amber-500 rounded"
+                      />
+                      <span>Show QR Code</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={brandConfig.showPrice}
+                        onChange={(e) => onUpdateBrandConfig({ showPrice: e.target.checked })}
+                        className="accent-amber-500 rounded"
+                      />
+                      <span>Show Price</span>
+                    </label>
+                  </div>
+
+                  {/* Quick Dish Name Size Selector */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-amber-300 font-semibold">Dish Name Size:</span>
+                    <div className="inline-flex rounded-lg bg-slate-900 p-0.5 border border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => onUpdateBrandConfig({ dishTitleScale: 'normal' })}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                          brandConfig.dishTitleScale === 'normal'
+                            ? 'bg-amber-500 text-slate-950 font-bold'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Standard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onUpdateBrandConfig({ dishTitleScale: 'prominent' })}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                          !brandConfig.dishTitleScale || brandConfig.dishTitleScale === 'prominent'
+                            ? 'bg-amber-500 text-slate-950 font-bold'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Prominent ⭐
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onUpdateBrandConfig({ dishTitleScale: 'xlarge' })}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                          brandConfig.dishTitleScale === 'xlarge'
+                            ? 'bg-amber-500 text-slate-950 font-bold'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Extra Large
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -701,6 +743,59 @@ export const Customizer: React.FC<CustomizerProps> = ({
                   <option value="display">Bold Display (Impact / Outfit)</option>
                   <option value="mono">Clean Monospace (Nutritional / Tech)</option>
                 </select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-300 font-semibold block text-xs">
+                    Dish Name Size & Hierarchy:
+                  </label>
+                  <span className="text-[10px] text-amber-400 font-mono">
+                    {brandConfig.dishTitleScale === 'xlarge'
+                      ? 'Extra Large (1.28×)'
+                      : brandConfig.dishTitleScale === 'normal'
+                      ? 'Standard (1.0×)'
+                      : 'Prominent Hero (1.16×) ⭐'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBrandConfig({ dishTitleScale: 'normal' })}
+                    className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-all ${
+                      brandConfig.dishTitleScale === 'normal'
+                        ? 'bg-amber-500 text-slate-950 font-bold border-amber-500 shadow-sm'
+                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
+                    }`}
+                  >
+                    Standard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBrandConfig({ dishTitleScale: 'prominent' })}
+                    className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-all ${
+                      !brandConfig.dishTitleScale || brandConfig.dishTitleScale === 'prominent'
+                        ? 'bg-amber-500 text-slate-950 font-bold border-amber-500 shadow-sm'
+                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
+                    }`}
+                  >
+                    Prominent ⭐
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateBrandConfig({ dishTitleScale: 'xlarge' })}
+                    className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-all ${
+                      brandConfig.dishTitleScale === 'xlarge'
+                        ? 'bg-amber-500 text-slate-950 font-bold border-amber-500 shadow-sm'
+                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
+                    }`}
+                  >
+                    Extra Large
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Dish Name baki content se compareablty thoda bada dikhta hai, aur tag dimension ke mutabiq dynamically scale hokar perfect dikhta hai.
+                </p>
               </div>
 
               <div>

@@ -101,7 +101,10 @@ export function generateSvgCode(
   const scaleY = faceHInches / 2.5;
   const scale = Math.max(0.62, Math.min(2.4, Math.sqrt(scaleX * scaleY)));
 
-  const fontTitle = Math.max(10, Math.min(24, Math.round(14.5 * scale)));
+  const titleLen = (item.menuName || '').length;
+  const titleMod = titleLen > 36 ? 0.78 : titleLen > 22 ? 0.88 : titleLen > 14 ? 0.96 : 1.06;
+  const userTitleMultiplier = brand.dishTitleScale === 'xlarge' ? 1.28 : brand.dishTitleScale === 'normal' ? 1.0 : 1.16;
+  const fontTitle = Math.max(11, Math.min(30, Math.round(18.5 * scale * userTitleMultiplier * titleMod)));
   const fontBody = Math.max(8, Math.min(13, Math.round(9.5 * scale)));
   const fontSmall = Math.max(7, Math.min(11.5, Math.round(8.5 * scale)));
   const fontPrice = Math.max(10, Math.min(24, Math.round(14 * scale)));
@@ -237,8 +240,11 @@ export function generateSvgCode(
     <!-- Dietary Box Symbol -->
     ${
       brand.showDietIcon
-        ? `<rect x="0" y="2" width="${vegBoxSize}" height="${vegBoxSize}" fill="${brand.backgroundColor === '#ffffff' ? '#ffffff' : '#1e293b'}" stroke="${symbolColor}" stroke-width="1.8" rx="2"/>
-           <circle cx="${vegBoxSize / 2}" cy="${vegBoxSize / 2 + 2}" r="${vegBoxSize / 3.5}" fill="${symbolColor}"/>`
+        ? isNonVeg
+          ? `<rect x="0" y="2" width="${vegBoxSize}" height="${vegBoxSize}" fill="${brand.backgroundColor === '#ffffff' ? '#ffffff' : '#1e293b'}" stroke="${symbolColor}" stroke-width="1.8" rx="2"/>
+             <polygon points="${vegBoxSize / 2},${2 + vegBoxSize * 0.16} ${vegBoxSize * 0.84},${2 + vegBoxSize * 0.84} ${vegBoxSize * 0.16},${2 + vegBoxSize * 0.84}" fill="${symbolColor}"/>`
+          : `<rect x="0" y="2" width="${vegBoxSize}" height="${vegBoxSize}" fill="${brand.backgroundColor === '#ffffff' ? '#ffffff' : '#1e293b'}" stroke="${symbolColor}" stroke-width="1.8" rx="2"/>
+             <circle cx="${vegBoxSize / 2}" cy="${vegBoxSize / 2 + 2}" r="${vegBoxSize / 3.5}" fill="${symbolColor}"/>`
         : ''
     }
 

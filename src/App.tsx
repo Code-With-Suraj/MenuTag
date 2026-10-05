@@ -48,6 +48,7 @@ export default function App() {
     cornerRadius: currentTemplateDef.defaultBrandConfig.cornerRadius || 8,
     shadow: 'lg',
     fontFamily: currentTemplateDef.defaultBrandConfig.fontFamily || 'serif',
+    dishTitleScale: 'prominent',
     showLogo: true,
     showBusinessName: true,
     showQrCode: true,

@@ -139,7 +139,7 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
           >
             <option value="all">All Diets</option>
             <option value="veg">Veg 🟢</option>
-            <option value="nonveg">Non-Veg 🔴</option>
+            <option value="nonveg">Non-Veg 🔺</option>
             <option value="vegan">Vegan 🌱</option>
             <option value="jain">Jain 🪷</option>
           </select>
@@ -386,7 +386,7 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <div>
                   <label className="text-slate-400 block mb-1">Price ({brandConfig.currencySymbol || 'Amount'}):</label>
                   <input
@@ -413,6 +413,25 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
                     }}
                     className="w-full p-2 rounded bg-slate-950 border border-slate-700 text-white"
                   />
+                </div>
+
+                <div>
+                  <label className="text-slate-400 block mb-1">Dietary Type:</label>
+                  <select
+                    value={inspectItem.dietaryType || 'Veg'}
+                    onChange={(e) => {
+                      const updated = { ...inspectItem, dietaryType: e.target.value as any };
+                      setInspectItem(updated);
+                      onUpdateSingleItem(updated);
+                    }}
+                    className="w-full p-2 rounded bg-slate-950 border border-slate-700 text-white text-xs"
+                  >
+                    <option value="Veg">Veg 🟢 (Circle)</option>
+                    <option value="Non-Veg">Non-Veg 🔺 (New Triangle)</option>
+                    <option value="Vegan">Vegan 🌱</option>
+                    <option value="Jain">Jain 🪷</option>
+                    <option value="Egg">Egg 🥚</option>
+                  </select>
                 </div>
               </div>
 

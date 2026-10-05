@@ -72,8 +72,37 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
   // Title & description length awareness for non-clipping text
   const titleLength = (item.menuName || '').length;
-  const titleScaleMod = titleLength > 32 ? 0.78 : titleLength > 22 ? 0.86 : titleLength > 15 ? 0.93 : 1.0;
-  const fontTitle = Math.max(10, Math.min(28, Math.round(14.5 * scale * titleScaleMod)));
+
+  // User selected title scale preference multiplier (prominent by default for hero dish name)
+  const userTitleScaleMultiplier =
+    brand.dishTitleScale === 'xlarge' ? 1.28 :
+    brand.dishTitleScale === 'normal' ? 1.0 :
+    1.16; // 'prominent' default: 16% larger than standard base
+
+  // Geometry awareness:
+  // Short/squat cards (face height < 2.25") have constrained vertical space
+  const heightFitMod = faceHeightInches < 1.9 ? 0.88 : faceHeightInches < 2.3 ? 0.94 : 1.0;
+  const isNarrowCard = faceWidthInches < 2.5;
+
+  // Smart dynamic title scaling:
+  // Short titles (<= 14 chars) get a boost to look bold & heroic.
+  // Medium titles (15-22 chars, e.g. "Paneer Tikka Angara") stay crisp & prominent.
+  // Longer titles scale gracefully to fit comfortably in 2 lines without clipping.
+  const titleScaleMod =
+    titleLength > 44 ? (isNarrowCard ? 0.68 : 0.72) :
+    titleLength > 32 ? (isNarrowCard ? 0.75 : 0.80) :
+    titleLength > 22 ? (isNarrowCard ? 0.84 : 0.88) :
+    titleLength > 14 ? (isNarrowCard ? 0.94 : 0.98) :
+    1.08;
+
+  // Dish Name (fontTitle) - prominently larger than body & auxiliary text, yet dynamically proportioned to tag size
+  const fontTitle = Math.max(
+    11,
+    Math.min(
+      34,
+      Math.round(18.5 * scale * userTitleScaleMultiplier * titleScaleMod * heightFitMod)
+    )
+  );
 
   const descLength = (item.description || '').length;
   const descScaleMod = descLength > 85 ? 0.86 : descLength > 55 ? 0.92 : 1.0;
@@ -85,8 +114,8 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   const paddingCard = Math.max(6, Math.min(26, Math.round(12 * scale)));
   const qrDimension = Math.max(20, Math.min(68, Math.round(28 * scale)));
   const iconBaseSize = Math.max(8.5, Math.min(20, Math.round(11 * scale)));
-  const vegBoxSize = Math.max(10.5, Math.min(22, Math.round(13.5 * scale)));
-  const vegDotSize = Math.max(5, Math.min(11, Math.round(6.8 * scale)));
+  const vegBoxSize = Math.max(11, Math.min(23, Math.round(14 * scale)));
+  const vegDotSize = Math.max(5, Math.min(11, Math.round(7 * scale)));
 
   // Dedicated Showcase Scaling for the 4 Photo Reference Templates (high-visibility print & display)
   const isShowcase =
@@ -100,9 +129,16 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     ? Math.max(0.78, Math.min(2.7, baseScale * (isVertical ? 1.35 : 1.18)))
     : scale;
 
-  const scBrandTitle = Math.max(12, Math.min(28, Math.round(14 * scScale)));
+  const scBrandTitle = Math.max(11, Math.min(24, Math.round(13 * scScale)));
   const scSub = Math.max(8, Math.min(15, Math.round(8.5 * scScale)));
-  const scDishTitle = Math.max(13, Math.min(34, Math.round(17 * scScale * titleScaleMod)));
+  // Hero Dish Name for Showcase Templates:
+  const scDishTitle = Math.max(
+    13,
+    Math.min(
+      40,
+      Math.round(21.5 * scScale * userTitleScaleMultiplier * titleScaleMod * heightFitMod)
+    )
+  );
   const scBody = Math.max(9, Math.min(17, Math.round(11 * scScale * descScaleMod)));
   const scMeta = Math.max(8.5, Math.min(16, Math.round(9.5 * scScale)));
   const scPrice = Math.max(16, Math.min(48, Math.round(24 * scScale)));
@@ -138,8 +174,8 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     let dotColor = 'bg-emerald-600';
 
     if (type === 'Non-Veg') {
-      colorClass = 'border-red-600 text-red-600';
-      dotColor = 'bg-red-600';
+      colorClass = 'border-red-700 text-red-700';
+      dotColor = 'bg-red-700';
     } else if (type === 'Egg') {
       colorClass = 'border-amber-600 text-amber-600';
       dotColor = 'bg-amber-500';
@@ -162,24 +198,34 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             borderColor: type === 'Non-Veg' ? '#b91c1c' : '#047857',
             color: type === 'Non-Veg' ? '#991b1b' : '#065f46',
           }}
-          title={`Dietary: ${type}`}
+          title={`Dietary: ${type || 'Veg'}`}
         >
           <div
-            className="rounded-[2px] flex items-center justify-center bg-white border-2 flex-shrink-0"
+            className="rounded-[2px] flex items-center justify-center bg-white border-2 flex-shrink-0 overflow-hidden"
             style={{
               width: `${vegBoxSize}px`,
               height: `${vegBoxSize}px`,
-              borderColor: type === 'Non-Veg' ? '#dc2626' : '#16a34a',
+              borderColor: type === 'Non-Veg' ? '#b91c1c' : '#16a34a',
             }}
           >
-            <div
-              className="rounded-full"
-              style={{
-                width: `${vegDotSize}px`,
-                height: `${vegDotSize}px`,
-                backgroundColor: type === 'Non-Veg' ? '#dc2626' : '#16a34a',
-              }}
-            />
+            {type === 'Non-Veg' ? (
+              <svg
+                viewBox="0 0 24 24"
+                className="w-full h-full text-red-700 fill-current"
+                style={{ padding: `${Math.max(1, Math.round(vegBoxSize * 0.12))}px` }}
+              >
+                <polygon points="12,3 21.5,20 2.5,20" />
+              </svg>
+            ) : (
+              <div
+                className="rounded-full"
+                style={{
+                  width: `${vegDotSize}px`,
+                  height: `${vegDotSize}px`,
+                  backgroundColor: '#16a34a',
+                }}
+              />
+            )}
           </div>
           <span className="font-black uppercase tracking-wider font-mono leading-none">
             {type === 'Jain' ? 'JAIN' : type === 'Non-Veg' ? 'NON-VEG' : 'PURE VEG'}
@@ -190,20 +236,30 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
     return (
       <div
-        className={`border-2 rounded-[2px] flex items-center justify-center flex-shrink-0 bg-white/95 shadow-xs ${colorClass}`}
+        className={`border-2 rounded-[2px] flex items-center justify-center flex-shrink-0 bg-white/95 shadow-xs overflow-hidden ${colorClass}`}
         style={{
           width: `${vegBoxSize}px`,
           height: `${vegBoxSize}px`,
         }}
         title={`Dietary: ${type || 'Veg'}`}
       >
-        <div
-          className={`rounded-full ${dotColor}`}
-          style={{
-            width: `${vegDotSize}px`,
-            height: `${vegDotSize}px`,
-          }}
-        />
+        {type === 'Non-Veg' ? (
+          <svg
+            viewBox="0 0 24 24"
+            className="w-full h-full text-red-700 fill-current"
+            style={{ padding: `${Math.max(1, Math.round(vegBoxSize * 0.12))}px` }}
+          >
+            <polygon points="12,3 21.5,20 2.5,20" />
+          </svg>
+        ) : (
+          <div
+            className={`rounded-full ${dotColor}`}
+            style={{
+              width: `${vegDotSize}px`,
+              height: `${vegDotSize}px`,
+            }}
+          />
+        )}
       </div>
     );
   };
@@ -554,12 +610,17 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             } items-center text-center px-1.5 relative z-10 min-h-0`}
             style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
           >
-            <h3
-              className="font-bold text-slate-50 font-serif leading-tight drop-shadow-sm max-w-full break-words line-clamp-2"
-              style={{ fontSize: `${scDishTitle}px` }}
-            >
-              {item.menuName}
-            </h3>
+            <div className="flex items-start justify-center gap-2 max-w-full px-1">
+              {renderVegSymbol() && (
+                <div className="mt-0.5 flex-shrink-0">{renderVegSymbol()}</div>
+              )}
+              <h3
+                className="font-bold text-slate-50 font-serif leading-[1.18] drop-shadow-sm max-w-full break-words line-clamp-2 text-center"
+                style={{ fontSize: `${scDishTitle}px` }}
+              >
+                {item.menuName}
+              </h3>
+            </div>
 
             {item.description && (
               <p
@@ -747,7 +808,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
               style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
             >
               <h3
-                className="font-bold text-[#1b4332] font-serif leading-tight break-words line-clamp-2 max-w-full"
+                className="font-bold text-[#1b4332] font-serif leading-[1.18] break-words line-clamp-2 max-w-full text-center"
                 style={{ fontSize: `${scDishTitle}px` }}
               >
                 {item.menuName}
@@ -762,13 +823,22 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 </p>
               )}
 
-              {/* Centered Green Capsule Badges */}
+              {/* Centered Badges */}
               <div className="flex items-center justify-center gap-2 flex-wrap pt-0.5">
                 <span
-                  className="px-2.5 py-1 rounded-full bg-[#2d6a4f] text-white font-bold uppercase tracking-wider shadow-xs"
+                  className={`px-2.5 py-1 rounded-full text-white font-bold uppercase tracking-wider shadow-xs flex items-center gap-1.5 ${
+                    item.dietaryType === 'Non-Veg' ? 'bg-red-700' : 'bg-[#2d6a4f]'
+                  }`}
                   style={{ fontSize: `${scBadge}px` }}
                 >
-                  • {item.dietaryType || 'VEG'}
+                  {item.dietaryType === 'Non-Veg' ? (
+                    <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
+                      <polygon points="12,3.5 21,19.5 3,19.5" />
+                    </svg>
+                  ) : (
+                    <span>•</span>
+                  )}
+                  <span>{item.dietaryType || 'VEG'}</span>
                 </span>
                 {item.chefRecommendation && (
                   <span
@@ -916,7 +986,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
               style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
             >
               <h3
-                className="font-bold text-[#451a03] font-serif leading-tight break-words line-clamp-2 max-w-full"
+                className="font-bold text-[#451a03] font-serif leading-[1.18] break-words line-clamp-2 max-w-full text-center"
                 style={{ fontSize: `${scDishTitle}px` }}
               >
                 {item.menuName}
@@ -1045,18 +1115,23 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             {brand.showBusinessName !== false && brand.businessName !== '' && (
               <h2
                 className="font-black tracking-tight text-amber-400 uppercase leading-none font-display"
-                style={{ fontSize: `${scBrandTitle * 1.35}px` }}
+                style={{ fontSize: `${scBrandTitle * 1.15}px` }}
               >
                 {brand.businessName !== undefined ? brand.businessName : 'TACO TRUCK'}
               </h2>
             )}
-            <div className="flex items-center justify-between gap-1 mt-0.5">
-              <h3
-                className="font-black tracking-tight text-orange-500 uppercase leading-tight font-display break-words line-clamp-2"
-                style={{ fontSize: `${scDishTitle}px` }}
-              >
-                {item.menuName}
-              </h3>
+            <div className="flex items-start justify-between gap-1 mt-0.5">
+              <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                {renderVegSymbol() && (
+                  <div className="mt-0.5 flex-shrink-0">{renderVegSymbol()}</div>
+                )}
+                <h3
+                  className="font-black tracking-tight text-orange-500 uppercase leading-[1.15] font-display break-words line-clamp-2"
+                  style={{ fontSize: `${scDishTitle}px` }}
+                >
+                  {item.menuName}
+                </h3>
+              </div>
               {brand.footerText && (
                 <span
                   className="text-amber-200/90 font-mono text-[9px] uppercase tracking-wider truncate max-w-[120px]"
@@ -1084,22 +1159,36 @@ export const MenuCard: React.FC<MenuCardProps> = ({
               </p>
             )}
 
-            {/* Badges: VEGAN + SPICY */}
+            {/* Badges: DIETARY + SPICY */}
             <div className="flex items-center gap-2 flex-wrap pt-0.5">
-              <span
-                className="px-2.5 py-1 rounded bg-emerald-700 text-white font-extrabold uppercase tracking-wider flex items-center gap-1"
-                style={{ fontSize: `${scBadge}px` }}
-              >
-                <Leaf style={{ width: `${scCoinIcon}px`, height: `${scCoinIcon}px` }} />
-                <span>VEGAN</span>
-              </span>
-              <span
-                className="px-2.5 py-1 rounded bg-red-600 text-white font-extrabold uppercase tracking-wider flex items-center gap-1"
-                style={{ fontSize: `${scBadge}px` }}
-              >
-                <span>SPICY</span>
-                <Flame style={{ width: `${scCoinIcon}px`, height: `${scCoinIcon}px` }} />
-              </span>
+              {item.dietaryType === 'Non-Veg' ? (
+                <span
+                  className="px-2.5 py-1 rounded bg-red-700 text-white font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-xs"
+                  style={{ fontSize: `${scBadge}px` }}
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+                    <polygon points="12,3 21.5,20 2.5,20" />
+                  </svg>
+                  <span>NON-VEG</span>
+                </span>
+              ) : (
+                <span
+                  className="px-2.5 py-1 rounded bg-emerald-700 text-white font-extrabold uppercase tracking-wider flex items-center gap-1"
+                  style={{ fontSize: `${scBadge}px` }}
+                >
+                  <Leaf style={{ width: `${scCoinIcon}px`, height: `${scCoinIcon}px` }} />
+                  <span>{item.dietaryType || 'VEGAN'}</span>
+                </span>
+              )}
+              {item.spiceLevel && item.spiceLevel !== 'None' && (
+                <span
+                  className="px-2.5 py-1 rounded bg-red-600 text-white font-extrabold uppercase tracking-wider flex items-center gap-1"
+                  style={{ fontSize: `${scBadge}px` }}
+                >
+                  <span>{item.spiceLevel.toUpperCase()}</span>
+                  <Flame style={{ width: `${scCoinIcon}px`, height: `${scCoinIcon}px` }} />
+                </span>
+              )}
             </div>
 
             {item.calories && (
@@ -1324,11 +1413,13 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           style={{ gap: `${Math.max(2, Math.round((isVeryTall ? 6 : isVertical ? 4.5 : 3.5) * scale))}px` }}
         >
           {/* Dish Name & Veg Symbol */}
-          <div className="flex items-center justify-between gap-1.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              {renderVegSymbol()}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-1.5 min-w-0 flex-1">
+              {renderVegSymbol() && (
+                <div className="mt-0.5 flex-shrink-0">{renderVegSymbol()}</div>
+              )}
               <h3
-                className={`font-bold leading-tight break-words line-clamp-2 ${
+                className={`font-extrabold leading-[1.18] tracking-tight break-words line-clamp-2 flex-1 min-w-0 ${
                   templateId === 'modern-minimal'
                     ? 'font-sans font-black tracking-tight text-slate-900'
                     : templateId === 'premium-3d-luxury'
@@ -1344,7 +1435,9 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 {item.menuName}
               </h3>
             </div>
-            {renderSpiceMeter()}
+            {renderSpiceMeter() && (
+              <div className="mt-0.5 flex-shrink-0">{renderSpiceMeter()}</div>
+            )}
           </div>
 
           {/* Badges Row */}

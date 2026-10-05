@@ -26,7 +26,7 @@ export const CsvGuide: React.FC = () => {
     { name: 'Category', req: 'Optional', desc: 'Section heading (e.g. Starters, Main Course, Bakery, Desserts)' },
     { name: 'Price', req: 'Optional', desc: 'Price string or numeric value (e.g. 280, $15.99)' },
     { name: 'Calories', req: 'Optional', desc: 'Energy value in kcal (e.g. 320, 610)' },
-    { name: 'Diet / Diet Type', req: 'Optional', desc: 'Auto displays Veg 🟢 / Non-Veg 🔴 / Egg 🥚 / Vegan 🌱 / Jain 🪷' },
+    { name: 'Diet / Diet Type', req: 'Optional', desc: 'Auto displays Veg 🟢 / Non-Veg 🔺 (Triangle) / Egg 🥚 / Vegan 🌱 / Jain 🪷' },
     { name: 'Spice Level', req: 'Optional', desc: 'Mild (🌶), Medium (🌶🌶), Hot (🌶🌶🌶)' },
     { name: 'Allergen', req: 'Optional', desc: 'Comma separated list (e.g. Dairy, Gluten, Nuts, Soy, Shellfish)' },
     { name: 'Chef Recommendation', req: 'Optional', desc: 'Boolean value (TRUE / FALSE or YES / NO) to show CHEF CHOICE ⭐ badge' },
@@ -107,7 +107,7 @@ export const CsvGuide: React.FC = () => {
           </p>
           <ul className="text-xs text-slate-300 space-y-1.5 font-mono">
             <li>🟢 <strong className="text-emerald-400">Veg:</strong> Veg, VEG, veg, Vegetarian</li>
-            <li>🔴 <strong className="text-red-400">Non-Veg:</strong> Non Veg, Non-Veg, Chicken, Mutton, Fish, Meat</li>
+            <li>🔺 <strong className="text-red-400">Non-Veg:</strong> Non Veg, Non-Veg, Chicken, Mutton, Fish, Meat</li>
             <li>🥚 <strong className="text-amber-400">Egg:</strong> Egg, Contains Egg</li>
             <li>🌱 <strong className="text-emerald-300">Vegan:</strong> Vegan, Plant Based</li>
             <li>🪷 <strong className="text-emerald-300">Jain:</strong> Jain, Pure Jain</li>
