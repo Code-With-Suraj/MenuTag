@@ -12,14 +12,13 @@ import { TAG_SIZES } from '../data/templates';
  */
 export function findCardElement(itemId: string): HTMLElement | null {
   const possibleIds = [
-    `live-export-card-${itemId}`,
-    `export-card-inner-${itemId}`,
-    `export-card-${itemId}`,
     `preview-card-${itemId}`,
-    `preview-card-inner-${itemId}`,
     `print-sheet-${itemId}`,
     `inspect-card-${itemId}`,
+    `live-export-card-${itemId}`,
+    `export-card-inner-${itemId}`,
     `card-${itemId}`,
+    `export-card-${itemId}`,
     itemId,
   ];
 
@@ -29,6 +28,27 @@ export function findCardElement(itemId: string): HTMLElement | null {
   }
   return null;
 }
+
+/**
+ * Calculate exact face dimensions and aspect ratio for any size key, including custom sizes
+ */
+export function getTagFaceDimensions(sizeKey: TagSize, brand: BrandConfig) {
+  const sizeInfo = TAG_SIZES[sizeKey] || TAG_SIZES.medium;
+  const isTent = Boolean(sizeInfo.isTentCard);
+  const faceW = sizeKey === 'custom' ? (brand.customWidthInches && brand.customWidthInches > 0 ? brand.customWidthInches : 3.5) : sizeInfo.widthInInches;
+  const totalH = isTent
+    ? (sizeKey === 'custom' ? (brand.customHeightInches && brand.customHeightInches > 0 ? brand.customHeightInches : 5.0) : sizeInfo.heightInInches)
+    : (sizeKey === 'custom' ? (brand.customHeightInches && brand.customHeightInches > 0 ? brand.customHeightInches : 2.5) : sizeInfo.heightInInches);
+  const faceH = isTent ? totalH / 2 : totalH;
+  const aspectRatio = totalH / faceW;
+  return { faceW, faceH, totalH, isTent, aspectRatio };
+}
+
+/**
+ * Yield execution to allow garbage collection and event loop processing
+ */
+export const yieldToBrowser = (): Promise<void> =>
+  new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /**
  * Check if a canvas element is completely transparent/blank
@@ -88,10 +108,10 @@ export function generateSvgCode(
   const sizeInfo = TAG_SIZES[sizeKey] || TAG_SIZES.medium;
   const isTent = Boolean(sizeInfo.isTentCard);
 
-  const faceWInches = sizeKey === 'custom' ? brand.customWidthInches || 3.5 : sizeInfo.widthInInches;
+  const faceWInches = sizeKey === 'custom' ? (brand.customWidthInches && brand.customWidthInches > 0 ? brand.customWidthInches : 3.5) : sizeInfo.widthInInches;
   const faceHInches = isTent
-    ? (sizeKey === 'custom' ? (brand.customHeightInches || 5.0) / 2 : sizeInfo.heightInInches / 2)
-    : (sizeKey === 'custom' ? brand.customHeightInches || 2.5 : sizeInfo.heightInInches);
+    ? (sizeKey === 'custom' ? ((brand.customHeightInches && brand.customHeightInches > 0 ? brand.customHeightInches : 5.0) / 2) : sizeInfo.heightInInches / 2)
+    : (sizeKey === 'custom' ? (brand.customHeightInches && brand.customHeightInches > 0 ? brand.customHeightInches : 2.5) : sizeInfo.heightInInches);
 
   const dpi = 96;
   const width = Math.round(faceWInches * dpi);
@@ -102,9 +122,9 @@ export function generateSvgCode(
   const scale = Math.max(0.62, Math.min(2.4, Math.sqrt(scaleX * scaleY)));
 
   const titleLen = (item.menuName || '').length;
-  const titleMod = titleLen > 36 ? 0.78 : titleLen > 22 ? 0.88 : titleLen > 14 ? 0.96 : 1.06;
+  const titleMod = titleLen > 44 ? 0.64 : titleLen > 32 ? 0.72 : titleLen > 22 ? 0.80 : titleLen > 15 ? 0.88 : 1.02;
   const userTitleMultiplier = brand.dishTitleScale === 'xlarge' ? 1.28 : brand.dishTitleScale === 'normal' ? 1.0 : 1.16;
-  const fontTitle = Math.max(11, Math.min(30, Math.round(18.5 * scale * userTitleMultiplier * titleMod)));
+  const fontTitle = Math.max(10.5, Math.min(28, Math.round(17.5 * scale * userTitleMultiplier * titleMod)));
   const fontBody = Math.max(8, Math.min(13, Math.round(9.5 * scale)));
   const fontSmall = Math.max(7, Math.min(11.5, Math.round(8.5 * scale)));
   const fontPrice = Math.max(10, Math.min(24, Math.round(14 * scale)));
@@ -159,6 +179,27 @@ export function generateSvgCode(
   }
 
   // Brand emblem or logo
+  // 2-line title wrapping for SVG
+  const titleX = brand.showDietIcon ? vegBoxSize + Math.round(6 * scale) : 0;
+  const maxTitleCharsPerLine = width > 320 ? 24 : 18;
+  let titleLines = [cleanName];
+  if (cleanName.length > maxTitleCharsPerLine) {
+    const words = cleanName.split(' ');
+    if (words.length > 1) {
+      let l1 = '';
+      let l2 = '';
+      for (const w of words) {
+        if ((l1 + ' ' + w).trim().length <= maxTitleCharsPerLine || l1 === '') {
+          l1 = (l1 + ' ' + w).trim();
+        } else {
+          l2 = (l2 + ' ' + w).trim();
+        }
+      }
+      titleLines = l2 ? [l1, l2] : [cleanName];
+    }
+  }
+  const titleExtraHeight = (titleLines.length - 1) * Math.round(fontTitle * 1.15);
+
   const chosenEmblem =
     brand.logoEmblem ||
     (templateId === 'bakery-artisanal'
@@ -249,7 +290,14 @@ export function generateSvgCode(
     }
 
     <!-- Dish Title -->
-    <text x="${brand.showDietIcon ? vegBoxSize + Math.round(6 * scale) : 0}" y="${Math.round(12 * scale)}" class="dish-title">${cleanName}</text>
+    <text class="dish-title">
+      ${titleLines
+        .map(
+          (line, idx) =>
+            `<tspan x="${titleX}" y="${Math.round(12 * scale) + idx * Math.round(fontTitle * 1.15)}">${line}</tspan>`
+        )
+        .join('')}
+    </text>
     
     ${
       spiceIndicator
@@ -258,7 +306,7 @@ export function generateSvgCode(
     }
 
     <!-- Badges Row -->
-    <g transform="translate(0, ${Math.round(18 * scale)})">
+    <g transform="translate(0, ${Math.round(18 * scale) + titleExtraHeight})">
       ${
         item.chefRecommendation
           ? `<rect x="0" y="0" width="${Math.round(76 * scale)}" height="${Math.round(15 * scale)}" rx="6" fill="#f59e0b"/>
@@ -274,7 +322,7 @@ export function generateSvgCode(
     </g>
 
     <!-- Description -->
-    <g transform="translate(0, ${item.chefRecommendation || item.bestSeller || item.isNew ? Math.round(38 * scale) : Math.round(24 * scale)})">
+    <g transform="translate(0, ${(item.chefRecommendation || item.bestSeller || item.isNew ? Math.round(38 * scale) : Math.round(24 * scale)) + titleExtraHeight})">
       <text x="0" y="${Math.round(10 * scale)}" class="desc-text">
         ${cleanDesc ? (cleanDesc.length > 55 ? cleanDesc.slice(0, 52) + '...' : cleanDesc) : ''}
       </text>
@@ -375,7 +423,8 @@ export async function captureExactMenuCard(
   brand: BrandConfig,
   sizeKey: TagSize = 'medium',
   templateId?: TemplateId,
-  pixelRatio: number = 3.5
+  pixelRatio: number = 2.5,
+  format: 'png' | 'jpeg' = 'png'
 ): Promise<string> {
   // 1. Locate element in live DOM or export sandbox
   const element = findCardElement(item.id);
@@ -386,12 +435,27 @@ export async function captureExactMenuCard(
         await document.fonts.ready;
       }
 
-      // Capture exact DOM with html-to-image
-      const dataUrl = await htmlToImage.toPng(element, {
-        pixelRatio,
-        cacheBust: true,
-        backgroundColor: brand.backgroundColor || '#0f172a',
-      });
+      const bgColor = brand.backgroundColor || '#0f172a';
+      
+      const capturePromise =
+        format === 'jpeg'
+          ? htmlToImage.toJpeg(element, {
+              quality: 0.90,
+              pixelRatio,
+              cacheBust: false,
+              backgroundColor: bgColor,
+            })
+          : htmlToImage.toPng(element, {
+              pixelRatio,
+              cacheBust: false,
+              backgroundColor: bgColor,
+            });
+
+      const timeoutPromise = new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('htmlToImage timeout')), 2200)
+      );
+
+      const dataUrl = await Promise.race([capturePromise, timeoutPromise]);
 
       if (dataUrl && dataUrl.length > 500) {
         return dataUrl;
@@ -401,10 +465,21 @@ export async function captureExactMenuCard(
     }
   }
 
-  // 2. High-precision vector SVG renderer fallback
+  // 2. High-precision vector SVG renderer fallback using exact card dimensions
+  const { faceW, faceH } = getTagFaceDimensions(sizeKey, brand);
   const svg = generateSvgCode(item, brand, sizeKey, templateId);
-  const canvas = await renderSvgToCanvas(svg, 380, 270, pixelRatio);
-  return canvas.toDataURL('image/png');
+  const canvas = await renderSvgToCanvas(
+    svg,
+    Math.round(faceW * 96),
+    Math.round(faceH * 96),
+    pixelRatio
+  );
+  const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+  const dataUrl = canvas.toDataURL(mimeType, format === 'jpeg' ? 0.90 : undefined);
+  // Free canvas GPU memory
+  canvas.width = 0;
+  canvas.height = 0;
+  return dataUrl;
 }
 
 /**
@@ -417,7 +492,7 @@ export async function exportSingleCardPng(
   templateId?: TemplateId,
   filename?: string
 ): Promise<boolean> {
-  const dataUrl = await captureExactMenuCard(item, brand, sizeKey, templateId, 4);
+  const dataUrl = await captureExactMenuCard(item, brand, sizeKey, templateId, 4, 'png');
   if (!dataUrl) return false;
 
   const defaultName = `menu_tag_${(item.menuName || 'card').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
@@ -429,6 +504,7 @@ export async function exportSingleCardPng(
 
 /**
  * Bulk Export all cards as a ZIP archive of high-res PNG images
+ * Optimized for large datasets (200+ cards) with memory-safe batching and event loop yielding
  */
 export async function exportBulkCardsZip(
   items: MenuItem[],
@@ -442,33 +518,56 @@ export async function exportBulkCardsZip(
   const zip = new JSZip();
   const folder = zip.folder('menu-tags-png') || zip;
 
+  // Adaptive pixel ratio: for large batches (200+), 1.4x-1.8x provides crisp 150-180 DPI print quality
+  // while cutting memory consumption by 85% to prevent browser Out-of-Memory crashes!
+  const effectivePixelRatio =
+    items.length > 150 ? 1.4 : items.length > 70 ? 1.7 : items.length > 30 ? 2.0 : 2.5;
+
   let count = 0;
   for (const item of items) {
     count++;
     if (onProgress) onProgress(count, items.length);
 
-    const dataUrl = await captureExactMenuCard(item, brand, sizeKey, templateId, 3.5);
-    if (dataUrl) {
-      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
-      const cleanName = (item.menuName || `tag_${count}`)
-        .replace(/[^a-z0-9]/gi, '_')
-        .toLowerCase();
-      folder.file(
-        `${count.toString().padStart(3, '0')}_${cleanName}.png`,
-        base64Data,
-        { base64: true }
+    try {
+      const dataUrl = await captureExactMenuCard(
+        item,
+        brand,
+        sizeKey,
+        templateId,
+        effectivePixelRatio,
+        'png'
       );
+      if (dataUrl) {
+        const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+        const cleanName = (item.menuName || `tag_${count}`)
+          .replace(/[^a-z0-9]/gi, '_')
+          .toLowerCase();
+        folder.file(
+          `${count.toString().padStart(3, '0')}_${cleanName}.png`,
+          base64Data,
+          { base64: true }
+        );
+      }
+    } catch (err) {
+      console.error(`Error capturing item ${count} (${item.menuName}):`, err);
     }
+
+    // Yield execution to allow garbage collection and prevent UI thread lockup
+    await yieldToBrowser();
   }
 
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const zipBlob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'STORE',
+  });
   saveAs(zipBlob, `menu_tags_png_bulk_${Date.now()}.zip`);
   return true;
 }
 
 /**
  * Export cards into a print-ready multi-card Grid Sheet PDF (A4 or US Letter)
- * Guarantees SAME-TO-SAME exact visual output matching the selected template!
+ * Guarantees EXACT aspect ratio matching custom and standard sizes - NO bottom blank space!
+ * Handles 200+ tags smoothly with memory-safe compression and event loop yielding.
  */
 export async function exportCardsSheetPdf(
   items: MenuItem[],
@@ -484,24 +583,29 @@ export async function exportCardsSheetPdf(
     orientation: 'portrait',
     unit: 'mm',
     format: paperSize,
+    compress: true,
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
   // Clean page margins & grid spacing
-  const marginX = 14;
-  const marginTop = 18;
-  const marginBottom = 14;
-  const gapX = 8;
-  const gapY = 8;
+  const marginX = 12;
+  const marginTop = 16;
+  const marginBottom = 12;
+  const gapX = 6;
+  const gapY = 6;
 
   const availableWidth = pageWidth - marginX * 2;
   const availableHeight = pageHeight - marginTop - marginBottom;
 
+  // Exact dynamic aspect ratio calculation matching EXACT tag size (and custom size):
+  const { aspectRatio } = getTagFaceDimensions(sizeKey, brand);
+
   const cols = 2;
   const cardW = (availableWidth - gapX * (cols - 1)) / cols;
-  const cardH = cardW * 0.71;
+  // EXACT height from dynamic aspect ratio - eliminates all bottom blank gaps!
+  const cardH = cardW * aspectRatio;
   const rows = Math.max(1, Math.floor((availableHeight + gapY) / (cardH + gapY)));
   const cardsPerPage = cols * rows;
 
@@ -516,18 +620,18 @@ export async function exportCardsSheetPdf(
     pdf.text(
       `MENU TAG STUDIO • PRINT SHEET (${paperSize.toUpperCase()})`,
       marginX,
-      11
+      10
     );
     pdf.setFont('helvetica', 'normal');
     pdf.text(
       `Page ${pageNum} of ${totalPages} • Total: ${items.length} Tags`,
       pageWidth - marginX,
-      11,
+      10,
       { align: 'right' }
     );
     pdf.setDrawColor(203, 213, 225);
     pdf.setLineWidth(0.3);
-    pdf.line(marginX, 13, pageWidth - marginX, 13);
+    pdf.line(marginX, 12, pageWidth - marginX, 12);
 
     // Footer note
     pdf.setFontSize(7);
@@ -535,10 +639,15 @@ export async function exportCardsSheetPdf(
     pdf.text(
       '✂️ Cut along outer boundaries • Recommended Paper: 250-300 GSM Matte / Gloss Cardstock',
       pageWidth / 2,
-      pageHeight - 6,
+      pageHeight - 5,
       { align: 'center' }
     );
   };
+
+  // Adaptive pixel ratio for large batches to avoid OOM
+  const effectivePixelRatio =
+    items.length > 150 ? 1.4 : items.length > 70 ? 1.7 : items.length > 30 ? 2.0 : 2.5;
+  const useJpeg = items.length > 30;
 
   while (currentIndex < items.length) {
     if (pageNumber > 1) {
@@ -559,44 +668,52 @@ export async function exportCardsSheetPdf(
       const x = marginX + col * (cardW + gapX);
       const y = marginTop + row * (cardH + gapY);
 
-      // Capture exact live card data URL
-      const imgDataUrl = await captureExactMenuCard(
-        item,
-        brand,
-        sizeKey,
-        templateId,
-        3.5
-      );
+      try {
+        const imgDataUrl = await captureExactMenuCard(
+          item,
+          brand,
+          sizeKey,
+          templateId,
+          effectivePixelRatio,
+          useJpeg ? 'jpeg' : 'png'
+        );
 
-      if (imgDataUrl) {
-        const drawW = cardW;
-        const drawH = cardH;
+        if (imgDataUrl) {
+          const drawW = cardW;
+          const drawH = cardH;
 
-        // Crop guides & corner tick marks
-        pdf.setDrawColor(203, 213, 225);
-        pdf.setLineWidth(0.2);
-        pdf.rect(x - 0.4, y - 0.4, drawW + 0.8, drawH + 0.8, 'S');
+          // Crop guides & corner tick marks - exact matching bounds!
+          pdf.setDrawColor(203, 213, 225);
+          pdf.setLineWidth(0.2);
+          pdf.rect(x - 0.3, y - 0.3, drawW + 0.6, drawH + 0.6, 'S');
 
-        // Corner crop marks
-        pdf.setDrawColor(148, 163, 184);
-        pdf.setLineWidth(0.3);
-        const tick = 2.5;
-        // Top-left
-        pdf.line(x - 2, y, x + tick, y);
-        pdf.line(x, y - 2, x, y + tick);
-        // Top-right
-        pdf.line(x + drawW - tick, y, x + drawW + 2, y);
-        pdf.line(x + drawW, y - 2, x + drawW, y + tick);
-        // Bottom-left
-        pdf.line(x - 2, y + drawH, x + tick, y + drawH);
-        pdf.line(x, y + drawH - tick, x, y + drawH + 2);
-        // Bottom-right
-        pdf.line(x + drawW - tick, y + drawH, x + drawW + 2, y + drawH);
-        pdf.line(x + drawW, y + drawH - tick, x + drawW, y + drawH + 2);
+          // Corner crop marks
+          pdf.setDrawColor(148, 163, 184);
+          pdf.setLineWidth(0.3);
+          const tick = 2.5;
+          // Top-left
+          pdf.line(x - 2, y, x + tick, y);
+          pdf.line(x, y - 2, x, y + tick);
+          // Top-right
+          pdf.line(x + drawW - tick, y, x + drawW + 2, y);
+          pdf.line(x + drawW, y - 2, x + drawW, y + tick);
+          // Bottom-left
+          pdf.line(x - 2, y + drawH, x + tick, y + drawH);
+          pdf.line(x, y + drawH - tick, x, y + drawH + 2);
+          // Bottom-right
+          pdf.line(x + drawW - tick, y + drawH, x + drawW + 2, y + drawH);
+          pdf.line(x + drawW, y + drawH - tick, x + drawW, y + drawH + 2);
 
-        // Embed high-res card artwork
-        pdf.addImage(imgDataUrl, 'PNG', x, y, drawW, drawH);
+          // Embed card artwork - accurately detect format so jsPDF NEVER throws format error!
+          const actualFormat = imgDataUrl.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+          pdf.addImage(imgDataUrl, actualFormat, x, y, drawW, drawH, undefined, 'FAST');
+        }
+      } catch (err) {
+        console.error(`Failed to capture item ${item.id}:`, err);
       }
+
+      // Yield after each item to prevent thread freezing
+      await yieldToBrowser();
     }
 
     currentIndex += cardsPerPage;
@@ -624,10 +741,16 @@ export async function exportCardsCatalogPdf(
     orientation: 'portrait',
     unit: 'mm',
     format: paperSize,
+    compress: true,
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
+
+  const { aspectRatio } = getTagFaceDimensions(sizeKey, brand);
+  const effectivePixelRatio =
+    items.length > 150 ? 1.4 : items.length > 70 ? 1.7 : items.length > 30 ? 2.0 : 2.5;
+  const useJpeg = items.length > 30;
 
   let count = 0;
   for (let i = 0; i < items.length; i++) {
@@ -659,26 +782,39 @@ export async function exportCardsCatalogPdf(
     pdf.setDrawColor(226, 232, 240);
     pdf.line(16, 16, pageWidth - 16, 16);
 
-    const imgDataUrl = await captureExactMenuCard(
-      item,
-      brand,
-      sizeKey,
-      templateId,
-      4
-    );
+    try {
+      const imgDataUrl = await captureExactMenuCard(
+        item,
+        brand,
+        sizeKey,
+        templateId,
+        effectivePixelRatio,
+        useJpeg ? 'jpeg' : 'png'
+      );
 
-    if (imgDataUrl) {
-      const cardWidth = Math.min(140, pageWidth - 40);
-      const cardHeight = cardWidth * 0.71;
-      const x = (pageWidth - cardWidth) / 2;
-      const y = (pageHeight - cardHeight) / 2 - 10;
+      if (imgDataUrl) {
+        let cardWidth = Math.min(140, pageWidth - 40);
+        let cardHeight = cardWidth * aspectRatio;
+        const maxHeight = pageHeight - 55;
+        if (cardHeight > maxHeight) {
+          cardHeight = maxHeight;
+          cardWidth = cardHeight / aspectRatio;
+        }
+        const x = (pageWidth - cardWidth) / 2;
+        const y = 24 + (maxHeight - cardHeight) / 2;
 
-      // Card shadow placeholder
-      pdf.setFillColor(241, 245, 249);
-      pdf.roundedRect(x + 2, y + 2, cardWidth, cardHeight, 3, 3, 'F');
+        // Card shadow placeholder
+        pdf.setFillColor(241, 245, 249);
+        pdf.roundedRect(x + 1.5, y + 1.5, cardWidth, cardHeight, 3, 3, 'F');
 
-      pdf.addImage(imgDataUrl, 'PNG', x, y, cardWidth, cardHeight);
+        const actualFormat = imgDataUrl.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+        pdf.addImage(imgDataUrl, actualFormat, x, y, cardWidth, cardHeight, undefined, 'FAST');
+      }
+    } catch (err) {
+      console.error(`Error cataloging item ${item.id}:`, err);
     }
+
+    await yieldToBrowser();
   }
 
   pdf.save(`menu_catalog_${Date.now()}.pdf`);
@@ -726,9 +862,17 @@ export async function exportBulkSvgsZip(
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase();
     folder.file(`${count.toString().padStart(3, '0')}_${cleanName}.svg`, svgCode);
+
+    if (count % 10 === 0) {
+      await yieldToBrowser();
+    }
   }
 
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const zipBlob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 4 },
+  });
   saveAs(zipBlob, `menu_tags_svg_bulk_${Date.now()}.zip`);
   return true;
 }

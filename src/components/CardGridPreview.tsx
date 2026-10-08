@@ -265,7 +265,7 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
       ) : (
         <div className="overflow-x-auto py-4">
           <div
-            className="flex flex-wrap justify-center gap-6"
+            className="flex flex-wrap justify-center items-start gap-6"
             style={{
               transform: `scale(${zoomScale})`,
               transformOrigin: 'top center',
@@ -276,7 +276,7 @@ export const CardGridPreview: React.FC<CardGridPreviewProps> = ({
               return (
                 <div
                   key={item.id}
-                  className={`relative group transition-all rounded-xl p-1.5 ${
+                  className={`relative group transition-all rounded-xl p-1.5 self-start ${
                     isChecked ? 'ring-2 ring-amber-400' : 'opacity-85 hover:opacity-100'
                   }`}
                 >

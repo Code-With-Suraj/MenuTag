@@ -454,7 +454,9 @@ export const Customizer: React.FC<CustomizerProps> = ({
                       )}
                     </div>
                     <p className="text-[11px] font-mono text-amber-400 mt-1">
-                      {info.widthInInches}" × {info.heightInInches}"
+                      {sizeKey === 'custom' && brandConfig.customWidthInches && brandConfig.customHeightInches
+                        ? `${brandConfig.customWidthInches}" × ${brandConfig.customHeightInches}"`
+                        : `${info.widthInInches}" × ${info.heightInInches}"`}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">{info.description}</p>
                   </div>
@@ -463,34 +465,67 @@ export const Customizer: React.FC<CustomizerProps> = ({
             </div>
 
             {selectedSize === 'custom' && (
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-4 text-xs">
-                <div>
-                  <label className="text-slate-400 block mb-1">Custom Width (Inches):</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    max="12"
-                    value={brandConfig.customWidthInches || 3.5}
-                    onChange={(e) =>
-                      onUpdateBrandConfig({ customWidthInches: parseFloat(e.target.value) || 3.5 })
-                    }
-                    className="p-1.5 rounded bg-slate-900 border border-slate-700 text-white w-24 text-center"
-                  />
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-200">Custom Dimensions</span>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                    ✓ Auto-Proportional Fit (No Blank Gaps)
+                  </span>
                 </div>
-                <div>
-                  <label className="text-slate-400 block mb-1">Custom Height (Inches):</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    max="12"
-                    value={brandConfig.customHeightInches || 2.5}
-                    onChange={(e) =>
-                      onUpdateBrandConfig({ customHeightInches: parseFloat(e.target.value) || 2.5 })
-                    }
-                    className="p-1.5 rounded bg-slate-900 border border-slate-700 text-white w-24 text-center"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-medium">Width (Inches):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1.5"
+                      max="12"
+                      value={brandConfig.customWidthInches || 3.5}
+                      onChange={(e) =>
+                        onUpdateBrandConfig({ customWidthInches: Math.max(1, parseFloat(e.target.value) || 3.5) })
+                      }
+                      className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-center font-mono focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-medium">Height (Inches):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="1"
+                      max="12"
+                      value={brandConfig.customHeightInches || 2.5}
+                      onChange={(e) =>
+                        onUpdateBrandConfig({ customHeightInches: Math.max(1, parseFloat(e.target.value) || 2.5) })
+                      }
+                      className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-center font-mono focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Presets for Custom Sizes */}
+                <div className="pt-2 border-t border-slate-800/80">
+                  <span className="text-[10px] text-slate-400 block mb-1.5">Quick Presets:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: '3.5" × 2" (Standard Tag)', w: 3.5, h: 2.0 },
+                      { label: '3" × 3" (Square Tag)', w: 3.0, h: 3.0 },
+                      { label: '4" × 2.5" (Wide Tag)', w: 4.0, h: 2.5 },
+                      { label: '2.5" × 3.5" (Vertical)', w: 2.5, h: 3.5 },
+                      { label: '5" × 3" (Large Label)', w: 5.0, h: 3.0 },
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() =>
+                          onUpdateBrandConfig({ customWidthInches: preset.w, customHeightInches: preset.h })
+                        }
+                        className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 text-[10px] text-slate-300 font-mono transition-colors"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

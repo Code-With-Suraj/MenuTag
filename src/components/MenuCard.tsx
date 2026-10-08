@@ -47,10 +47,10 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   const isTentCard = Boolean(sizeInfo.isTentCard);
 
   // Calculate face dimensions in inches
-  const faceWidthInches = sizeKey === 'custom' ? brand.customWidthInches || 3.5 : sizeInfo.widthInInches;
+  const faceWidthInches = sizeKey === 'custom' ? (brand.customWidthInches && brand.customWidthInches > 0 ? brand.customWidthInches : 3.5) : sizeInfo.widthInInches;
   const faceHeightInches = isTentCard
-    ? (sizeKey === 'custom' ? (brand.customHeightInches || 5.0) / 2 : sizeInfo.heightInInches / 2)
-    : (sizeKey === 'custom' ? brand.customHeightInches || 2.5 : sizeInfo.heightInInches);
+    ? (sizeKey === 'custom' ? ((brand.customHeightInches && brand.customHeightInches > 0 ? brand.customHeightInches : 5.0) / 2) : sizeInfo.heightInInches / 2)
+    : (sizeKey === 'custom' ? (brand.customHeightInches && brand.customHeightInches > 0 ? brand.customHeightInches : 2.5) : sizeInfo.heightInInches);
 
   // 96 DPI pixel calculations
   const dpi = 96;
@@ -85,22 +85,24 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   const isNarrowCard = faceWidthInches < 2.5;
 
   // Smart dynamic title scaling:
-  // Short titles (<= 14 chars) get a boost to look bold & heroic.
-  // Medium titles (15-22 chars, e.g. "Paneer Tikka Angara") stay crisp & prominent.
-  // Longer titles scale gracefully to fit comfortably in 2 lines without clipping.
+  // Short 1-line titles (<= 15 chars, e.g. "Vada Pav", "Namkeen") look grand & bold.
+  // Medium 2-line titles (16-24 chars, e.g. "Poori With Bhaji", "Plain Paratha With")
+  // scale gracefully so BOTH lines fit comfortably with room for descenders and no clipping.
+  // Long titles (25-36+ chars) scale smoothly so 2-3 lines never overflow.
+  const isMultiLineTitle = titleLength > 15;
   const titleScaleMod =
-    titleLength > 44 ? (isNarrowCard ? 0.68 : 0.72) :
-    titleLength > 32 ? (isNarrowCard ? 0.75 : 0.80) :
-    titleLength > 22 ? (isNarrowCard ? 0.84 : 0.88) :
-    titleLength > 14 ? (isNarrowCard ? 0.94 : 0.98) :
-    1.08;
+    titleLength > 44 ? (isNarrowCard ? 0.58 : 0.62) :
+    titleLength > 32 ? (isNarrowCard ? 0.66 : 0.70) :
+    titleLength > 22 ? (isNarrowCard ? 0.74 : 0.78) :
+    titleLength > 15 ? (isNarrowCard ? 0.82 : 0.85) :
+    1.02;
 
   // Dish Name (fontTitle) - prominently larger than body & auxiliary text, yet dynamically proportioned to tag size
   const fontTitle = Math.max(
-    11,
+    10.5,
     Math.min(
-      34,
-      Math.round(18.5 * scale * userTitleScaleMultiplier * titleScaleMod * heightFitMod)
+      28,
+      Math.round(17.5 * scale * userTitleScaleMultiplier * titleScaleMod * heightFitMod)
     )
   );
 
@@ -133,10 +135,10 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   const scSub = Math.max(8, Math.min(15, Math.round(8.5 * scScale)));
   // Hero Dish Name for Showcase Templates:
   const scDishTitle = Math.max(
-    13,
+    11.5,
     Math.min(
-      40,
-      Math.round(21.5 * scScale * userTitleScaleMultiplier * titleScaleMod * heightFitMod)
+      32,
+      Math.round(20 * scScale * userTitleScaleMultiplier * titleScaleMod * heightFitMod)
     )
   );
   const scBody = Math.max(9, Math.min(17, Math.round(11 * scScale * descScaleMod)));
@@ -506,16 +508,19 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   // Card Surface Rendering with Smart Adaptive Layout & Scaling
   const renderCardSurface = (isInvertedBack: boolean = false) => {
     const is3D = templateId === 'premium-3d-luxury' || templateId === 'glassmorphism-3d' || templateId === 'floating-3d-card';
-    const descClampClass = faceHeightInches < 2.0 ? 'line-clamp-1' : faceHeightInches < 3.2 ? 'line-clamp-2' : 'line-clamp-3';
+    const descClampClass = isMultiLineTitle
+      ? (faceHeightInches < 2.2 ? 'hidden' : faceHeightInches < 3.2 ? 'line-clamp-1' : 'line-clamp-2')
+      : (faceHeightInches < 2.0 ? 'line-clamp-1' : faceHeightInches < 3.2 ? 'line-clamp-2' : 'line-clamp-3');
 
     // SPECIAL REFERENCE TEMPLATE 1: L'AURA FINE DINING (Royal Navy & Gold Filigree Corner Luxury)
     if (templateId === 'laura-fine-dining') {
       return (
         <div
-          className={`w-full h-full flex flex-col justify-between relative overflow-hidden transition-all select-none font-serif ${
+          className={`w-full h-full flex-1 flex flex-col justify-between relative overflow-hidden transition-all select-none font-serif ${
             isInvertedBack ? 'rotate-180' : ''
           }`}
           style={{
+            height: '100%',
             padding: `${scPadding}px`,
             backgroundColor: brand.backgroundColor || '#0a1128',
             color: '#f8fafc',
@@ -605,17 +610,19 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
           {/* Middle Content: Dish Name, Description, Spice/Kcal, Allergen Coins */}
           <div
-            className={`flex-1 flex flex-col ${
-              isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-center py-1'
-            } items-center text-center px-1.5 relative z-10 min-h-0`}
-            style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
+            className={`flex-1 min-h-0 flex flex-col ${
+              isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-between py-1'
+            } items-center text-center px-1.5 relative z-10 w-full`}
+            style={{
+              gap: `${Math.max(2, Math.round((titleLength > 15 ? (isVeryTall ? 4 : isVertical ? 2.5 : 1.5) : (isVeryTall ? 8 : isVertical ? 5 : 3.5)) * Math.min(1.4, scScale)))}px`,
+            }}
           >
-            <div className="flex items-start justify-center gap-2 max-w-full px-1">
+            <div className="flex items-start justify-center gap-2 max-w-full px-1 flex-shrink-0 w-full">
               {renderVegSymbol() && (
                 <div className="mt-0.5 flex-shrink-0">{renderVegSymbol()}</div>
               )}
               <h3
-                className="font-bold text-slate-50 font-serif leading-[1.18] drop-shadow-sm max-w-full break-words line-clamp-2 text-center"
+                className="font-bold text-slate-50 font-serif leading-snug drop-shadow-sm max-w-full break-words line-clamp-4 text-center pb-0.5 flex-1 min-w-0"
                 style={{ fontSize: `${scDishTitle}px` }}
               >
                 {item.menuName}
@@ -741,17 +748,18 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     if (templateId === 'bistro-cafe') {
       return (
         <div
-          className={`w-full h-full flex flex-col justify-between relative overflow-hidden transition-all select-none p-1.5 ${
+          className={`w-full h-full flex-1 flex flex-col justify-between relative overflow-hidden transition-all select-none p-1.5 ${
             isInvertedBack ? 'rotate-180' : ''
           }`}
           style={{
+            height: '100%',
             backgroundColor: '#d8eee2',
             borderRadius: `${Math.max(8, Math.round(brand.cornerRadius * scScale))}px`,
           }}
         >
           {/* Inner Cream Arched Parchment */}
           <div
-            className="w-full h-full flex flex-col justify-between relative overflow-hidden bg-[#fbf9f4] border border-[#8dc6af]/60 rounded-xl p-3 shadow-inner"
+            className="w-full h-full flex-1 min-h-0 flex flex-col justify-between relative overflow-hidden bg-[#fbf9f4] border border-[#8dc6af]/60 rounded-xl p-3 shadow-inner"
             style={{
               padding: `${scPadding}px`,
               borderRadius: `${Math.max(6, Math.round((brand.cornerRadius - 2) * scScale))}px`,
@@ -802,17 +810,21 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
             {/* Middle Dish & Descriptions */}
             <div
-              className={`flex-1 flex flex-col ${
-                isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-center py-1'
-              } items-center text-center px-1.5 relative z-10 min-h-0`}
-              style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
+              className={`flex-1 min-h-0 flex flex-col ${
+                isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-between py-1'
+              } items-center text-center px-1.5 relative z-10 w-full`}
+              style={{
+                gap: `${Math.max(2, Math.round((titleLength > 15 ? (isVeryTall ? 4 : isVertical ? 2.5 : 1.5) : (isVeryTall ? 8 : isVertical ? 5 : 3.5)) * Math.min(1.4, scScale)))}px`,
+              }}
             >
-              <h3
-                className="font-bold text-[#1b4332] font-serif leading-[1.18] break-words line-clamp-2 max-w-full text-center"
-                style={{ fontSize: `${scDishTitle}px` }}
-              >
-                {item.menuName}
-              </h3>
+              <div className="flex-shrink-0 w-full max-w-full px-1">
+                <h3
+                  className="font-bold text-[#1b4332] font-serif leading-snug break-words line-clamp-4 max-w-full text-center pb-0.5"
+                  style={{ fontSize: `${scDishTitle}px` }}
+                >
+                  {item.menuName}
+                </h3>
+              </div>
 
               {item.description && (
                 <p
@@ -925,17 +937,18 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     if (templateId === 'la-patisserie') {
       return (
         <div
-          className={`w-full h-full flex flex-col justify-between relative overflow-hidden transition-all select-none p-1.5 ${
+          className={`w-full h-full flex-1 flex flex-col justify-between relative overflow-hidden transition-all select-none p-1.5 ${
             isInvertedBack ? 'rotate-180' : ''
           }`}
           style={{
+            height: '100%',
             backgroundColor: '#faeed4',
             borderRadius: `${Math.max(8, Math.round(brand.cornerRadius * scScale))}px`,
           }}
         >
           {/* Inner Vintage Parchment with Carved Top Arch in Chocolate */}
           <div
-            className="w-full h-full flex flex-col justify-between relative overflow-hidden bg-[#fdfbf7] border border-[#b45309]/30 rounded-xl p-3 shadow-inner"
+            className="w-full h-full flex-1 min-h-0 flex flex-col justify-between relative overflow-hidden bg-[#fdfbf7] border border-[#b45309]/30 rounded-xl p-3 shadow-inner"
             style={{
               padding: `${scPadding}px`,
               borderRadius: `${Math.max(6, Math.round((brand.cornerRadius - 2) * scScale))}px`,
@@ -980,17 +993,21 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
             {/* Middle Content */}
             <div
-              className={`flex-1 flex flex-col ${
-                isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-center py-1'
-              } items-center text-center px-1.5 relative z-10 min-h-0`}
-              style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
+              className={`flex-1 min-h-0 flex flex-col ${
+                isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-between py-1'
+              } items-center text-center px-1.5 relative z-10 w-full`}
+              style={{
+                gap: `${Math.max(2, Math.round((titleLength > 15 ? (isVeryTall ? 4 : isVertical ? 2.5 : 1.5) : (isVeryTall ? 8 : isVertical ? 5 : 3.5)) * Math.min(1.4, scScale)))}px`,
+              }}
             >
-              <h3
-                className="font-bold text-[#451a03] font-serif leading-[1.18] break-words line-clamp-2 max-w-full text-center"
-                style={{ fontSize: `${scDishTitle}px` }}
-              >
-                {item.menuName}
-              </h3>
+              <div className="flex-shrink-0 w-full max-w-full px-1">
+                <h3
+                  className="font-bold text-[#451a03] font-serif leading-snug break-words line-clamp-4 max-w-full text-center pb-0.5"
+                  style={{ fontSize: `${scDishTitle}px` }}
+                >
+                  {item.menuName}
+                </h3>
+              </div>
 
               {item.description && (
                 <p
@@ -1082,10 +1099,11 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     if (templateId === 'taco-truck') {
       return (
         <div
-          className={`w-full h-full flex flex-col justify-between relative overflow-hidden transition-all select-none font-sans ${
+          className={`w-full h-full flex-1 flex flex-col justify-between relative overflow-hidden transition-all select-none font-sans ${
             isInvertedBack ? 'rotate-180' : ''
           }`}
           style={{
+            height: '100%',
             padding: `${scPadding}px`,
             backgroundColor: '#121214',
             color: '#ffffff',
@@ -1111,7 +1129,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           />
 
           {/* Top Header: Giant Condensed Woodblock Typography */}
-          <div className="relative z-10 flex flex-col">
+          <div className="relative z-10 flex flex-col flex-shrink-0">
             {brand.showBusinessName !== false && brand.businessName !== '' && (
               <h2
                 className="font-black tracking-tight text-amber-400 uppercase leading-none font-display"
@@ -1126,27 +1144,19 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                   <div className="mt-0.5 flex-shrink-0">{renderVegSymbol()}</div>
                 )}
                 <h3
-                  className="font-black tracking-tight text-orange-500 uppercase leading-[1.15] font-display break-words line-clamp-2"
+                  className="font-black tracking-tight text-orange-500 uppercase leading-snug font-display break-words line-clamp-4 pb-0.5 flex-1 min-w-0"
                   style={{ fontSize: `${scDishTitle}px` }}
                 >
                   {item.menuName}
                 </h3>
               </div>
-              {brand.footerText && (
-                <span
-                  className="text-amber-200/90 font-mono text-[9px] uppercase tracking-wider truncate max-w-[120px]"
-                  title={brand.footerText}
-                >
-                  {brand.footerText}
-                </span>
-              )}
             </div>
           </div>
 
           {/* Middle Body */}
           <div
             className={`flex-1 flex flex-col ${
-              isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-center py-1'
+              isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-between py-1'
             } relative z-10 min-h-0`}
             style={{ gap: `${Math.max(3, Math.round((isVeryTall ? 8 : isVertical ? 5 : 3.5) * Math.min(1.4, scScale)))}px` }}
           >
@@ -1255,10 +1265,11 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
     return (
       <div
-        className={`w-full h-full flex flex-col justify-between relative overflow-hidden transition-all select-none ${getFontFamilyClass()} ${
+        className={`w-full h-full flex-1 flex flex-col justify-between relative overflow-hidden transition-all select-none ${getFontFamilyClass()} ${
           isInvertedBack ? 'rotate-180' : ''
         }`}
         style={{
+          height: '100%',
           padding: `${paddingCard}px`,
           backgroundColor: templateId === 'glassmorphism-3d' ? `${brand.backgroundColor}dd` : brand.backgroundColor,
           color: brand.textColor,
@@ -1408,18 +1419,18 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         {/* ======================================================== */}
         <div
           className={`flex-1 min-h-0 flex flex-col ${
-            isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-center py-1'
-          } relative z-10 overflow-hidden`}
-          style={{ gap: `${Math.max(2, Math.round((isVeryTall ? 6 : isVertical ? 4.5 : 3.5) * scale))}px` }}
+            isVeryTall ? 'justify-evenly py-2' : isVertical ? 'justify-around py-1.5' : 'justify-between py-1'
+          } relative z-10 w-full`}
+          style={{ gap: `${Math.max(2, Math.round((isMultiLineTitle ? 2.5 : (isVeryTall ? 6 : isVertical ? 4.5 : 3.5)) * scale))}px` }}
         >
           {/* Dish Name & Veg Symbol */}
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-2 flex-shrink-0 w-full">
             <div className="flex items-start gap-1.5 min-w-0 flex-1">
               {renderVegSymbol() && (
                 <div className="mt-0.5 flex-shrink-0">{renderVegSymbol()}</div>
               )}
               <h3
-                className={`font-extrabold leading-[1.18] tracking-tight break-words line-clamp-2 flex-1 min-w-0 ${
+                className={`font-extrabold leading-snug tracking-tight break-words line-clamp-4 flex-1 min-w-0 pb-0.5 ${
                   templateId === 'modern-minimal'
                     ? 'font-sans font-black tracking-tight text-slate-900'
                     : templateId === 'premium-3d-luxury'
@@ -1595,11 +1606,13 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   return (
     <div
       id={cardElementId || `card-${item.id}`}
-      className={`relative group bg-white p-0.5 sm:p-1 rounded-xl transition-all shadow-md hover:shadow-xl ${getBorderClasses()}`}
+      className={`relative group rounded-xl transition-all shadow-md hover:shadow-xl ${getBorderClasses()}`}
       style={{
         width: `${cardWidthPx}px`,
         height: `${totalCardHeightPx}px`,
         borderColor: brand.borderColor,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
       {/* Scissors Crop Marks at Corners if enabled */}
@@ -1621,11 +1634,11 @@ export const MenuCard: React.FC<MenuCardProps> = ({
       )}
 
       {/* Render Main Front Card */}
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-full flex flex-col flex-1 min-h-full">
         {isTentCard ? (
           <>
             {/* Top Half: Inverted Back View for folded tent card */}
-            <div className="w-full h-1/2 border-b border-dashed border-amber-500/40 relative overflow-hidden">
+            <div className="w-full h-1/2 flex-1 border-b border-dashed border-amber-500/40 relative overflow-hidden flex flex-col">
               {renderCardSurface(true)}
               <div
                 className="absolute bottom-0 left-0 right-0 bg-amber-500/15 text-amber-700 dark:text-amber-300 text-center uppercase tracking-widest font-mono select-none"
@@ -1636,7 +1649,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             </div>
 
             {/* Bottom Half: Front Upright View */}
-            <div className="w-full h-1/2 overflow-hidden">
+            <div className="w-full h-1/2 flex-1 overflow-hidden flex flex-col">
               {renderCardSurface(false)}
             </div>
           </>

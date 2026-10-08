@@ -62,6 +62,8 @@ export default function App() {
     showBadges: true,
     showCropMarks: false,
     showFoldLine: true,
+    customWidthInches: 3.5,
+    customHeightInches: 2.5,
   });
 
   // Modal States
@@ -335,7 +337,7 @@ export default function App() {
         className="fixed pointer-events-none"
         style={{
           position: 'fixed',
-          left: '-10000px',
+          left: '0px',
           top: '0px',
           width: '2400px',
           opacity: 1,
@@ -343,11 +345,16 @@ export default function App() {
           zIndex: -99999,
           display: 'flex',
           flexWrap: 'wrap',
+          alignItems: 'flex-start',
           gap: '16px',
         }}
       >
         {items.map((item) => (
-          <div key={item.id} id={`live-export-card-${item.id}`}>
+          <div
+            key={item.id}
+            id={`live-export-card-${item.id}`}
+            style={{ display: 'inline-block', lineHeight: 0, padding: 0, margin: 0 }}
+          >
             <MenuCard
               item={item}
               sizeKey={selectedSize}
